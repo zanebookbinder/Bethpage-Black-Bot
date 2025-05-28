@@ -6,7 +6,7 @@ set -e
 # Configurable variables
 IMAGE_NAME="docker-images"
 IMAGE_TAG="v4.0.0"
-AWS_ACCOUNT_ID="511803112403"
+AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 AWS_REGION="us-east-1"
 ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG"
 
