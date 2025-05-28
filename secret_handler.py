@@ -1,0 +1,27 @@
+import boto3
+import json
+
+class SecretHandler():
+	
+	def get_username_and_password(self):
+		secret_name = "bethpaige-secret"
+		region_name = "us-east-1"
+
+		# Create a Secrets Manager client
+		session = boto3.session.Session()
+		client = session.client(
+			service_name='secretsmanager',
+			region_name=region_name
+		)
+
+		get_secret_value_response = client.get_secret_value(
+			SecretId=secret_name
+		)
+
+		secret_string = get_secret_value_response['SecretString']
+		secret = json.loads(secret_string)
+
+        # Extract username and password
+		username = secret.get("bethpaige_email")
+		password = secret.get("bethpaige_password")
+		return username, password
