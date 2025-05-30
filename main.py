@@ -10,14 +10,14 @@ CLEAR_TABLE_LOCAL = False
 class BethpaigeBlackBot:
     
     def __init__(self, clear_table_before_starting):
-        email_sender = EmailSender()
+        secret_handler = SecretHandler()
+        self.email, self.password = secret_handler.get_username_and_password()
+        email_sender = EmailSender(self.email)
         try:
             if CLEAR_TABLE_LOCAL or clear_table_before_starting:
                 print('Clearing DB table before starting')
                 DynamoDBConnection().clear_table()
 
-            secret_handler = SecretHandler()
-            self.email, self.password = secret_handler.get_username_and_password()
             new_times = self.get_new_tee_times()
             if new_times:
                 email_sender.send_email(new_times)
