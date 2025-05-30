@@ -1,22 +1,20 @@
-import os
 from astral.sun import sun
 from astral import LocationInfo
 from datetime import datetime, timedelta
 from date_handler import DateHandler
 import holidays
+from decimal import Decimal
+from dynamo_db_connection import DynamoDBConnection
 
 class TeeTimeFilterer():
 
 	def __init__(self):
+		self.db_table = DynamoDBConnection()
+
 		try:
-			# CONFIG FROM LAMBDA
-			self.playable_days_of_week = os.environ.get('PLAYABLE_DAYS_OF_WEEK', "Saturday;Sunday").split(';')
-			self.earliest_playable_time = os.environ.get('EARLIEST_PLAYABLE_TIME', "8:00am")
-			self.extra_playable_days = os.environ.get('EXTRA_PLAYABLE_DAYS', 
-					"6/19/2025;7/3/2025;7/4/2025;8/29/2025;9/1/2025").split(';')
-			self.include_holidays = bool(os.environ.get('INCLUDE_HOLIDAYS', True))
-			self.minimum_minutes_before_sunset = int(os.environ.get('MINIMUM_MINUTES_BEFORE_SUNSET', "240"))
-			self.min_players = int(os.environ.get('MIN_PLAYERS', "2"))
+			# CONFIG FROM DATABASE
+			self.load_config_from_database()
+			self.output_current_config()
 
 			# LOCATION AND HOILDAY CONFIG
 			self.bethpaige_info = LocationInfo("Farmingdale", "USA", "America/New_York", 40.7326, -73.4457)
@@ -89,6 +87,47 @@ class TeeTimeFilterer():
 
 		return is_playable_day_of_week or is_extra_day_to_notify or is_us_holiday
 	
+	def load_config_from_database(self):
+		config_data = self.db_table.get_config()
+
+		if not config_data:
+			# Fallback defaults if no config found
+			self.playable_days_of_week = ["Saturday", "Sunday"]
+			self.earliest_playable_time = "8:00am"
+			self.extra_playable_days = ["6/19/2025", "7/3/2025", "7/4/2025", "8/29/2025", "9/1/2025"]
+			self.include_holidays = True
+			self.minimum_minutes_before_sunset = 240
+			self.min_players = 2
+			return
+
+		# Grab the first (and presumably only) config item
+
+		def convert_decimal(value):
+			# Convert DynamoDB Decimal to int if possible
+			if isinstance(value, Decimal):
+				if value % 1 == 0:
+					return int(value)
+				else:
+					return float(value)
+			return value
+
+		self.playable_days_of_week = config_data.get("playable_days_of_week", ["Saturday", "Sunday"])
+		self.earliest_playable_time = config_data.get("earliest_playable_time", "8:00am")
+		self.extra_playable_days = config_data.get("extra_playable_days", ["6/19/2025", "7/3/2025", "7/4/2025", "8/29/2025", "9/1/2025"])
+		self.include_holidays = config_data.get("include_holidays", True)
+		self.minimum_minutes_before_sunset = convert_decimal(config_data.get("minimum_minutes_before_sunset", 240))
+		self.min_players = convert_decimal(config_data.get("min_players", 2))
+
+	def output_current_config(self):
+		print(
+				"CONFIG LOADED:\n"
+				f"  Playable Days of Week: {self.playable_days_of_week}\n"
+				f"  Earliest Playable Time: {self.earliest_playable_time}\n"
+				f"  Extra Playable Days: {self.extra_playable_days}\n"
+				f"  Include Holidays: {self.include_holidays}\n"
+				f"  Minimum Minutes Before Sunset: {self.minimum_minutes_before_sunset}\n"
+				f"  Minimum Players: {self.min_players}"
+			)
 
 # t = TeeTimeFilterer()
 # d = [{'Date': 'Saturday May 31st', 'Time': '3:50pm', 'Players': 2, 'Holes': 18}]
