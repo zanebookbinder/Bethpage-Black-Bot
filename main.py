@@ -4,16 +4,16 @@ from secret_handler import SecretHandler
 from tee_time_filterer import TeeTimeFilterer
 from email_sender import EmailSender
 import traceback
+import json
 
 CLEAR_TABLE_LOCAL = False
 
 class BethpaigeBlackBot:
-    def __init__(self):
+    def notify_if_new_tee_times(self):
         secret_handler = SecretHandler()
         self.email, self.password = secret_handler.get_username_and_password()
         email_sender = EmailSender(self.email)
         try:
-
             new_times = self.get_new_tee_times()
             if new_times:
                 email_sender.send_email(new_times)
@@ -70,5 +70,45 @@ class BethpaigeBlackBot:
         return new_times
 
 def lambda_handler(event, context):
-    BethpaigeBlackBot()
+    # If the event came from API Gateway (HTTP API)
+    print(event)
+    if "routeKey" in event:
+        print(event['routeKey'])
+        method, path = event['routeKey'].split()
+
+        if path == "/config":
+            ddc = DynamoDBConnection()
+            if method == "GET":
+                return {
+                    "statusCode": 200,
+                    "body": ddc.to_json_str(ddc.get_config()),
+                    "headers": {"Content-Type": "application/json"}
+                }
+            elif method == "POST":
+                data = json.loads(event.get("body", "{}"))
+                result = ddc.update_config_from_json(data)
+                # Save data to DynamoDB or wherever needed
+                return {
+                    "statusCode": 200,
+                    "body": json.dumps({"message": "Config updated", "result": result}),
+                    "headers": {"Content-Type": "application/json"}
+                }
+
+        return {
+            "statusCode": 404,
+            "body": json.dumps({"message": "Path from API Gateway not found"}),
+            "headers": {"Content-Type": "application/json"}
+        }
+
+    # Otherwise, this is a scheduled or direct invocation
+    bot = BethpaigeBlackBot()
+    bot.notify_if_new_tee_times()
+
+    return {
+        "statusCode": 200,
+        "body": json.dumps({"message": "Tee time check completed."}),
+        "headers": {"Content-Type": "application/json"}
+    }
+
+
     return {"status": "done"}

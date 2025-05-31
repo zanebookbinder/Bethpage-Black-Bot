@@ -1,5 +1,7 @@
 import boto3
 from datetime import datetime
+from decimal import Decimal
+import json
 
 class DynamoDBConnection:
 
@@ -40,31 +42,25 @@ class DynamoDBConnection:
         )
         return response.get('Item')['data']
 
-    def create_or_update_config(self, new_config):
+    def update_config_from_json(self, new_config_json):
         # Fetch existing config
         response = self.table.get_item(Key={"id": "config"})
         item = response.get("Item")
 
-        if not item:
-            dynamodb_item = new_config.config_to_dynamodb_item()
-        else:
-            # Merge new_config fields with existing item data
-            current_config = self.dynamodb_item_to_config(item)
-
-            # Update fields (overwrite current_config fields with new_config values)
-            current_config.earliest_playable_time = new_config.earliest_playable_time
-            current_config.extra_playable_days = new_config.extra_playable_days
-            current_config.include_holidays = new_config.include_holidays
-            current_config.minimum_minutes_before_sunset = (
-                new_config.minimum_minutes_before_sunset
-            )
-            current_config.min_players = new_config.min_players
-            current_config.playable_days_of_week = new_config.playable_days_of_week
-
-            dynamodb_item = current_config.config_to_dynamodb_item()
+        item['data'] = new_config_json
 
         # Save updated config back to DynamoDB
-        self.table.put_item(Item=dynamodb_item)
+        result = self.table.put_item(Item=item)
+        return result
+    
+    def to_json_str(self, data):
+        return json.dumps(data, default=self.decimal_default)
+    
+    def decimal_default(self, obj):
+        if isinstance(obj, Decimal):
+            # Convert to int if whole number, else float
+            return int(obj) if obj % 1 == 0 else float(obj)
+        raise TypeError(f"Type {type(obj)} not serializable")
 
 
 # d = DynamoDBConnection()
