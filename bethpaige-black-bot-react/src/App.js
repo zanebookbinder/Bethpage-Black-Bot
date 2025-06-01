@@ -1,16 +1,16 @@
 import './App.css';
-import {Amplify} from 'aws-amplify';
-import { Authenticator, withAuthenticator } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
-import awsconfig from './aws-exports';
-
-Amplify.configure(awsconfig);
-
+import Homepage from './Homepage.js';
 
 function App() {
   return (
+    <div>
+      <Homepage />
+    </div>
+  )
+  return (
     <div className="w-full h-full flex flex-col bg-gradient-to-r from-indigo-500 from-10% via-sky-500 via-30% to-emerald-500 to-90%">
-      <Authenticator>
+      {/* <Authenticator> */}
         {({ signOut }) => (
           <main className="flex flex-col flex-grow">
             <header className="flex justify-between items-center p-4">
@@ -28,9 +28,9 @@ function App() {
             </div>
           </main>
         )}
-      </Authenticator>
+      {/* </Authenticator> */}
     </div>
   );
 }
 
-export default withAuthenticator(App);
+export default App;
