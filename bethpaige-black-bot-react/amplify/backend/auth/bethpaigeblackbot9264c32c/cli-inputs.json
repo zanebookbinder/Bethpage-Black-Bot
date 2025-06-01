@@ -1,10 +1,10 @@
 {
   "version": "1",
   "cognitoConfig": {
-    "identityPoolName": "bbbamplify051a5bc1_identitypool_051a5bc1",
+    "identityPoolName": "bethpaigeblackbot9264c32c_identitypool_9264c32c",
     "allowUnauthenticatedIdentities": false,
-    "resourceNameTruncated": "bbbamp051a5bc1",
-    "userPoolName": "bbbamplify051a5bc1_userpool_051a5bc1",
+    "resourceNameTruncated": "bethpa9264c32c",
+    "userPoolName": "bethpaigeblackbot9264c32c_userpool_9264c32c",
     "autoVerifiedAttributes": [
       "email"
     ],
@@ -31,10 +31,10 @@
     "userpoolClientReadAttributes": [
       "email"
     ],
-    "userpoolClientLambdaRole": "bbbamp051a5bc1_userpoolclient_lambda_role",
+    "userpoolClientLambdaRole": "bethpa9264c32c_userpoolclient_lambda_role",
     "userpoolClientSetAttributes": false,
-    "sharedId": "051a5bc1",
-    "resourceName": "bbbamplify051a5bc1",
+    "sharedId": "9264c32c",
+    "resourceName": "bethpaigeblackbot9264c32c",
     "authSelections": "identityPoolAndUserPool",
     "useDefault": "defaultSocial",
     "hostedUI": true,
@@ -42,10 +42,8 @@
       "email"
     ],
     "hostedUIDomainName": "bethpaige-black-bot-auth",
-    "authProvidersUserPool": [
-      "Google"
-    ],
-    "hostedUIProviderMeta": "[{\"ProviderName\":\"Google\",\"authorize_scopes\":\"openid email profile\",\"AttributeMapping\":{\"email\":\"email\",\"username\":\"sub\"}}]",
+    "authProvidersUserPool": [],
+    "hostedUIProviderMeta": "[]",
     "oAuthMetadata": "{\"AllowedOAuthFlows\":[\"code\"],\"AllowedOAuthScopes\":[\"phone\",\"email\",\"openid\",\"profile\",\"aws.cognito.signin.user.admin\"],\"CallbackURLs\":[\"http://localhost:3000/\"],\"LogoutURLs\":[\"http://localhost:3000/\"]}",
     "userPoolGroupList": [],
     "serviceName": "Cognito",

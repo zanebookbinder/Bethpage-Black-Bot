@@ -1,6 +1,6 @@
 {
   "auth": {
-    "bbbamplify051a5bc1": {
+    "bethpaigeblackbot9264c32c": {
       "customAuth": false,
       "dependsOn": [],
       "frontendAuthConfig": {
@@ -15,9 +15,7 @@
         "signupAttributes": [
           "EMAIL"
         ],
-        "socialProviders": [
-          "GOOGLE"
-        ],
+        "socialProviders": [],
         "usernameAttributes": [
           "EMAIL"
         ],
