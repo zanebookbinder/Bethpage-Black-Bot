@@ -1,8 +1,8 @@
-from dynamo_db_connection import DynamoDBConnection
-from email_sender import EmailSender
-from secret_handler import SecretHandler
-from tee_time_filterer import TeeTimeFilterer
-from web_scraper import WebScraper
+from lambda_helpers.dynamo_db_connection import DynamoDBConnection
+from lambda_helpers.email_sender import EmailSender
+from lambda_helpers.secret_handler import SecretHandler
+from lambda_helpers.tee_time_filterer import TeeTimeFilterer
+from lambda_helpers.web_scraper import WebScraper
 import traceback
 
 class BethpageBlackBot:

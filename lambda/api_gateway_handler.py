@@ -1,4 +1,4 @@
-from dynamo_db_connection import DynamoDBConnection
+from lambda_helpers.dynamo_db_connection import DynamoDBConnection
 import json
 
 class ApiGatewayHandler():
