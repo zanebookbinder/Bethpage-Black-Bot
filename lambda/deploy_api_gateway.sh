@@ -4,7 +4,8 @@
 LAMBDA_NAME="bethpaige-black-bot"          # Your Lambda function name
 API_NAME="bethpage-black-bot-api"
 STAGE_NAME="prod"
-ROUTE_PATH="/config"
+CONFIG_ROUTE_PATH="/config"
+RECENT_TIMES_ROUTE_PATH="/getRecentTimes"
 
 # ---------- 1. Create API Gateway HTTP API ----------
 echo "Creating API..."
@@ -36,15 +37,23 @@ INTEGRATION_ID=$(aws apigatewayv2 create-integration \
 echo "Integration ID: $INTEGRATION_ID"
 
 # ---------- 4. Create Routes ----------
+
+# CONFIG GET/POST ROUTES
 echo "Creating routes..."
 aws apigatewayv2 create-route \
   --api-id $API_ID \
-  --route-key "GET $ROUTE_PATH" \
+  --route-key "GET $CONFIG_ROUTE_PATH" \
   --target integrations/$INTEGRATION_ID
 
 aws apigatewayv2 create-route \
   --api-id $API_ID \
-  --route-key "POST $ROUTE_PATH" \
+  --route-key "POST $CONFIG_ROUTE_PATH" \
+  --target integrations/$INTEGRATION_ID
+
+# GET RECENT TIMES ROUTE
+aws apigatewayv2 create-route \
+  --api-id $API_ID \
+  --route-key "GET $RECENT_TIMES_ROUTE_PATH" \
   --target integrations/$INTEGRATION_ID
 
 # ---------- 5. Create Stage ----------
@@ -66,8 +75,11 @@ aws lambda add-permission \
   --statement-id apigateway-access \
   --action lambda:InvokeFunction \
   --principal apigateway.amazonaws.com \
-  --source-arn "arn:aws:execute-api:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):$API_ID/*/*$ROUTE_PATH"
+  --source-arn "arn:aws:execute-api:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):$API_ID/*/*/*"
 
 # ---------- 7. Output Final URL ----------
 echo "✅ API Gateway route deployed!"
-echo "➡️  Invoke URL: https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME$config"
+echo "➡️  Invoke URLs:"
+echo "   GET  https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/config"
+echo "   POST https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/config"
+echo "   GET  https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/recent-times"

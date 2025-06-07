@@ -1,4 +1,4 @@
-from bethpaige_black_bot import BethpageBlackBot
+from bethpage_black_bot import BethpageBlackBot
 from api_gateway_handler import ApiGatewayHandler
 
 def lambda_handler(event, context):
