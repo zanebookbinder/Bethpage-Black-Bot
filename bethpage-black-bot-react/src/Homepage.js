@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Tabs, TabItem } from '@aws-amplify/ui-react';
+import { Tabs } from '@aws-amplify/ui-react';
 import CurrentTeeTimes from './components/CurrentTeeTimes';
 import UpdateConfiguration from './components/UpdateConfiguration';
 import SignUpMenu from './components/SignUpMenu';

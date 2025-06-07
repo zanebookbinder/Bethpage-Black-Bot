@@ -29,6 +29,7 @@ echo "🚀 Updating Lambda function 'bethpaige-black-bot' with new image..."
 
 aws lambda update-function-code \
   --function-name bethpaige-black-bot \
-  --image-uri $ECR_URI
+  --image-uri $ECR_URI \
+  --no-cli-pager
 
 echo "✅ Lambda function updated successfully."
