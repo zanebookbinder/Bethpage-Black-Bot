@@ -16,7 +16,7 @@ class EmailSender:
         # Build the HTML table
         html_lines = [
             "<html><body>",
-            "<h2>New Bethpaige Tee Times Found</h2>",
+            "<h2>New Bethpage Tee Times Found</h2>",
             "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>",
             "<thead><tr><th>Date</th><th>Time</th><th>Players</th><th>Holes</th></tr></thead>",
             "<tbody>",
@@ -40,7 +40,7 @@ class EmailSender:
             Source=self.email,
             Destination={"ToAddresses": [self.email]},
             Message={
-                "Subject": {"Data": "New Bethpaige Tee Times Found"},
+                "Subject": {"Data": "New Bethpage Tee Times Found"},
                 "Body": {"Html": {"Data": body_html}},
             },
         )
@@ -51,7 +51,7 @@ class EmailSender:
             Source=self.email,
             Destination={"ToAddresses": [self.email]},
             Message={
-                "Subject": {"Data": "[ERROR] Bethpaige Black Bot"},
+                "Subject": {"Data": "[ERROR] Bethpage Black Bot"},
                 "Body": {"Text": {"Data": error_as_str}},
             },
         )

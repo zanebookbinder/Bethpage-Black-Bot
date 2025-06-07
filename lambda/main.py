@@ -8,7 +8,7 @@ import json
 
 CLEAR_TABLE_LOCAL = False
 
-class BethpaigeBlackBot:
+class BethpageBlackBot:
     def notify_if_new_tee_times(self):
         secret_handler = SecretHandler()
         self.email, self.password = secret_handler.get_username_and_password()
@@ -101,7 +101,7 @@ def lambda_handler(event, context):
         }
 
     # Otherwise, this is a scheduled or direct invocation
-    bot = BethpaigeBlackBot()
+    bot = BethpageBlackBot()
     bot.notify_if_new_tee_times()
 
     return {

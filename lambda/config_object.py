@@ -1,6 +1,6 @@
 from typing import List
 
-class BethpaigeBlackBotConfig:
+class BethpageBlackBotConfig:
     def __init__(
         self,
         earliest_playable_time: str = "8:00am",

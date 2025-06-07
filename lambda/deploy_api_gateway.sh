@@ -2,7 +2,7 @@
 
 # ---------- Config Variables ----------
 LAMBDA_NAME="bethpaige-black-bot"          # Your Lambda function name
-API_NAME="bethpaige-black-bot-api"
+API_NAME="bethpage-black-bot-api"
 STAGE_NAME="prod"
 ROUTE_PATH="/config"
 

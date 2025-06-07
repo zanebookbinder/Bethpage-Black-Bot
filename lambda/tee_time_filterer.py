@@ -17,7 +17,7 @@ class TeeTimeFilterer():
 			self.output_current_config()
 
 			# LOCATION AND HOILDAY CONFIG
-			self.bethpaige_info = LocationInfo("Farmingdale", "USA", "America/New_York", 40.7326, -73.4457)
+			self.bethpage_info = LocationInfo("Farmingdale", "USA", "America/New_York", 40.7326, -73.4457)
 			self.holiday_dates = [date.strftime("%m/%d/%Y") for date in holidays.UnitedStates(years=datetime.now().year)]
 			self.date_handler = DateHandler()
 		except Exception as e:
@@ -55,7 +55,7 @@ class TeeTimeFilterer():
 		return time_of_day > earliest_playable_time_as_dt
 
 	def is_far_enough_before_sunset(self, date_obj, time_of_day):
-		sunset_time = sun(self.bethpaige_info.observer, date=date_obj, tzinfo=self.bethpaige_info.timezone)['sunset']
+		sunset_time = sun(self.bethpage_info.observer, date=date_obj, tzinfo=self.bethpage_info.timezone)['sunset']
 		before_sunset_dt = sunset_time - timedelta(minutes=self.minimum_minutes_before_sunset)
 
 		return time_of_day < before_sunset_dt.time()
