@@ -4,7 +4,7 @@ import json
 class SecretHandler():
 	
 	def get_username_and_password(self):
-		secret_name = "bethpaige-secret"
+		secret_name = "bethpage-secret"
 		region_name = "us-east-1"
 
 		# Create a Secrets Manager client
@@ -22,6 +22,6 @@ class SecretHandler():
 		secret = json.loads(secret_string)
 
         # Extract username and password
-		username = secret.get("bethpaige_email")
-		password = secret.get("bethpaige_password")
+		username = secret.get("bethpage_email")
+		password = secret.get("bethpage_password")
 		return username, password

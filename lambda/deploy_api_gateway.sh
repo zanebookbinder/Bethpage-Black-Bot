@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ---------- Config Variables ----------
-LAMBDA_NAME="bethpaige-black-bot"          # Your Lambda function name
+LAMBDA_NAME="bethpage-black-bot"          # Your Lambda function name
 API_NAME="bethpage-black-bot-api"
 STAGE_NAME="prod"
 CONFIG_ROUTE_PATH="/config"
