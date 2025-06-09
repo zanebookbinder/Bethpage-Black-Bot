@@ -1,23 +1,53 @@
-
+import { useState } from 'react';
 
 export default function CurrentTeeTimes() {
-  
-  const fetchCurrentTeeTimes = async (base) => {
-      try {
-        const res = await fetch(`${base}/config`);
-        const data = await res.json();
-        setFormData({
-      playable_days_of_week: data.playable_days_of_week || [],
-          earliest_playable_time: convertTo24Hour(data.earliest_playable_time) || '',
-          extra_playable_days: data.extra_playable_days,
-          include_holidays: data.include_holidays,
-          minimum_minutes_before_sunset: String(data.minimum_minutes_before_sunset || ''),
-          min_players: String(data.min_players || ''),
-        });
-      } catch (err) {
-        setStatusMessage('Failed to fetch configuration');
-      }
-    };
+  const [recentTeeTimes, setRecentTeeTimes] = useState([
+    {
+      "Date": "Thursday June 5th",
+      "Holes": "18",
+      "Players": "4",
+      "Time": "4:50pm"
+    },
+    {
+      "Date": "Thursday June 5th",
+      "Holes": "18",
+      "Players": "4",
+      "Time": "5:20pm"
+    }
+  ] );
+  const [statusMessage, setStatusMessage] = useState('Current Tee Times content goes here.');
 
-  return <div>Current Tee Times content goes here.</div>;
+  const apiBase = process.env.REACT_APP_API_URL;
+
+  useEffect(() => {
+    fetchCurrentTeeTimes(apiBase);
+  }, []);
+
+  const fetchCurrentTeeTimes = async (base) => {
+    try {
+      const res = await fetch(`${base}/getRecentTimes`);
+      const data = await res.json();
+      setRecentTeeTimes(data['result']);
+
+      if (!data['result'].length) {
+        setStatusMessage('No tee times available within the next week, try again later!')
+      }
+    } catch (err) {
+      setStatusMessage('Failed to fetch tee times.');
+    }
+  };
+
+  return (
+    <div>
+      {recentTeeTimes && recentTeeTimes.length > 0 ? (
+        <div>
+          {recentTeeTimes.map((teeTime, index) => (
+            <div key={index}>{teeTime.Date}, {teeTime.Holes}, {teeTime.Time}, {teeTime.Players}</div>
+          ))}
+        </div>
+      ) : (
+        <p>{statusMessage}</p>
+      )}
+    </div>
+  );
 }

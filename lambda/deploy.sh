@@ -7,6 +7,8 @@ set -e
 LAMBDA_NAME="bethpage-black-bot"
 IMAGE_NAME="docker-images"
 IMAGE_TAG="v5.0.0"
+LAMBDA_TIMEOUT_SECONDS=90
+MEMORY_SIZE_MB=512
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 AWS_REGION="us-east-1"
 ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG"
@@ -31,6 +33,22 @@ echo "🚀 Updating Lambda function 'bethpage-black-bot' with new image..."
 # -------- Create or Update Lambda --------
 echo "🔍 Checking if Lambda '$LAMBDA_NAME' exists..."
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region $AWS_REGION >/dev/null 2>&1; then
+    CURRENT_TIMEOUT=$(aws lambda get-function-configuration \
+      --function-name "$LAMBDA_NAME" \
+      --region $AWS_REGION \
+      --query "Timeout" \
+      --output text)
+
+    if [ "$CURRENT_TIMEOUT" -ne 90 ]; then
+      echo "🛠️ Updating function configuration (timeout = 90 seconds)..."
+      aws lambda update-function-configuration \
+        --function-name "$LAMBDA_NAME" \
+        --timeout 90 \
+        --region $AWS_REGION \
+        --no-cli-pager
+      aws lambda wait function-updated --function-name "$LAMBDA_NAME" --region $AWS_REGION
+    fi
+    
     echo "♻️ Lambda exists. Updating with new image..."
     aws lambda update-function-code \
       --function-name "$LAMBDA_NAME" \
@@ -46,6 +64,8 @@ else
       --code ImageUri="$ECR_URI" \
       --role "$IAM_ROLE_ARN" \
       --region $AWS_REGION \
+      --timeout $LAMBDA_TIMEOUT_SECONDS \
+      --memory-size $MEMORY_SIZE_MB \
       --no-cli-pager
     echo "✅ Lambda function created successfully."
 fi

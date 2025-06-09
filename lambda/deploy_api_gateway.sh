@@ -6,6 +6,10 @@ API_NAME="bethpage-black-bot-api"
 STAGE_NAME="prod"
 CONFIG_ROUTE_PATH="/config"
 RECENT_TIMES_ROUTE_PATH="/getRecentTimes"
+REGISTER_ROUTE_PATH="/register"
+GET_EMAIL_REGISTRATION_PATH="/emailConfig"
+
+ALLOWED_ORIGINS='["http://localhost:3000"]'
 
 # ---------- 1. Create API Gateway HTTP API ----------
 echo "Creating API..."
@@ -38,22 +42,35 @@ echo "Integration ID: $INTEGRATION_ID"
 
 # ---------- 4. Create Routes ----------
 
-# CONFIG GET/POST ROUTES
+# GET: CONFIG ROUTE
 echo "Creating routes..."
 aws apigatewayv2 create-route \
   --api-id $API_ID \
   --route-key "GET $CONFIG_ROUTE_PATH" \
   --target integrations/$INTEGRATION_ID
 
+# POST: CONFIG ROUTE
 aws apigatewayv2 create-route \
   --api-id $API_ID \
   --route-key "POST $CONFIG_ROUTE_PATH" \
   --target integrations/$INTEGRATION_ID
 
-# GET RECENT TIMES ROUTE
+# GET: RECENT TIMES ROUTE
 aws apigatewayv2 create-route \
   --api-id $API_ID \
   --route-key "GET $RECENT_TIMES_ROUTE_PATH" \
+  --target integrations/$INTEGRATION_ID
+
+# POST: REGISTER ACCOUNT ROUTE
+aws apigatewayv2 create-route \
+  --api-id $API_ID \
+  --route-key "POST $REGISTER_ROUTE_PATH" \
+  --target integrations/$INTEGRATION_ID
+
+# GET: EMAIL CONFIG ROUTE
+aws apigatewayv2 create-route \
+  --api-id $API_ID \
+  --route-key "GET $GET_EMAIL_REGISTRATION_PATH" \
   --target integrations/$INTEGRATION_ID
 
 # ---------- 5. Create Stage ----------
@@ -77,9 +94,23 @@ aws lambda add-permission \
   --principal apigateway.amazonaws.com \
   --source-arn "arn:aws:execute-api:$(aws configure get region):$(aws sts get-caller-identity --query Account --output text):$API_ID/*/*/*"
 
+# ---------- 6.5 Enable CORS ----------
+echo "Enabling CORS for allowed origins: $ALLOWED_ORIGINS"
+aws apigatewayv2 update-api \
+  --api-id $API_ID \
+  --cors-configuration "$(jq -n \
+    --argjson origins "$ALLOWED_ORIGINS" \
+    '{
+      AllowOrigins: $origins,
+      AllowMethods: ["GET", "POST", "OPTIONS"],
+      AllowHeaders: ["*"],
+      ExposeHeaders: ["*"],
+      MaxAge: 3600
+    }')"
+
 # ---------- 7. Output Final URL ----------
 echo "✅ API Gateway route deployed!"
 echo "➡️  Invoke URLs:"
 echo "   GET  https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/config"
 echo "   POST https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/config"
-echo "   GET  https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/recent-times"
+echo "   GET  https://$API_ID.execute-api.$(aws configure get region).amazonaws.com/$STAGE_NAME/getRecentTimes"

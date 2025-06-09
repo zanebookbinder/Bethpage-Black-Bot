@@ -6,6 +6,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from lambda_helpers.date_handler import DateHandler
 import time
+# import tempfile
 
 class WebScraper:
 
@@ -33,6 +34,9 @@ class WebScraper:
             "AppleWebKit/537.36 (KHTML, like Gecko) "
             "Chrome/114.0.0.0 Safari/537.36"
         )
+
+        # user_data_dir = tempfile.mkdtemp()
+        # chrome_options.add_argument(f"--user-data-dir={user_data_dir}")
 
         try:
             service = Service(

@@ -37,20 +37,10 @@ export default function UpdateConfiguration() {
 	return () => clearTimeout(timer);
   }, [statusMessage]);
 
-  const [apiBase, setApiBase] = useState('');
+  const apiBase = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetch('/config.json')
-      .then((res) => {
-        if (!res.ok) throw new Error('config.json not found');
-        return res.json();
-      })
-      .then((config) => {
-        const base = config.apiBaseUrl;
-        setApiBase(base);
-        fetchConfig(base);
-      })
-      .catch((err) => setStatusMessage(`Error: ${err.message}`));
+      fetchConfig(apiBase);
   }, []);
 
   const fetchConfig = async (base) => {

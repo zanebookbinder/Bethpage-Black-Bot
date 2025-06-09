@@ -1,13 +1,13 @@
 import boto3
 from datetime import datetime
-from decimal import Decimal
-import json
+from bbb_config import BethpageBlackBotConfig
 
 class DynamoDBConnection:
 
     def __init__(self):
         self.dynamodb = boto3.resource("dynamodb")
         self.table = self.dynamodb.Table("tee-times")
+        self.config_table = self.dynamodb.Table("bethpage-black-bot-config")
 
     def publish_teetimes(self, all_tee_times, filtered_tee_times):
         item = {
@@ -33,6 +33,14 @@ class DynamoDBConnection:
             }
         )
         return response.get('Item')['filtered_tee_times']
+    
+    def get_latest_tee_times_all(self):
+        response = self.table.get_item(
+            Key={
+                'id': 'latest-tee-times'
+            }
+        )
+        return response.get('Item')['all_tee_times']
 
     def get_config(self):
         response = self.table.get_item(
@@ -53,14 +61,17 @@ class DynamoDBConnection:
         result = self.table.put_item(Item=item)
         return result
     
-    def to_json_str(self, data):
-        return json.dumps(data, default=self.decimal_default)
+    def get_user_config(self, email):
+        response = self.config_table.get_item(Key={"id": email})
+        item = response.get("Item")
+        return item
     
-    def decimal_default(self, obj):
-        if isinstance(obj, Decimal):
-            # Convert to int if whole number, else float
-            return int(obj) if obj % 1 == 0 else float(obj)
-        raise TypeError(f"Type {type(obj)} not serializable")
+    def create_or_update_user_config(self, user_email, new_config=None):
+        config_object = BethpageBlackBotConfig(new_config) # uses defaults if new_config is none
+        db_item = config_object.config_to_dynamodb_item(user_email)
+
+        result = self.config_table.put_item(Item=db_item)
+        return result
 
 
 # d = DynamoDBConnection()

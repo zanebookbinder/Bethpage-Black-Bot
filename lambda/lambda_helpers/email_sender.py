@@ -1,13 +1,15 @@
 import boto3
 from collections import defaultdict
 
-
 class EmailSender:
 
-    def __init__(self, email):
+    def __init__(self, email=None):
         self.email = email
+        self.ses = boto3.client("ses", region_name="us-east-1")
 
-    def send_email(self, new_times):
+    def send_email(self, new_times, email=None):
+        email = self.email if not email else email
+
         # Group times by date
         grouped = defaultdict(list)
         for time in new_times:
@@ -35,8 +37,7 @@ class EmailSender:
         body_html = "".join(html_lines)
 
         # Send email with HTML body
-        ses = boto3.client("ses", region_name="us-east-1")
-        ses.send_email(
+        self.ses.send_email(
             Source=self.email,
             Destination={"ToAddresses": [self.email]},
             Message={
@@ -45,9 +46,10 @@ class EmailSender:
             },
         )
 
-    def send_error_email(self, error_as_str):
-        ses = boto3.client("ses", region_name="us-east-1")
-        ses.send_email(
+    def send_error_email(self, error_as_str, email=None):
+        email = self.email if not email else email
+
+        self.ses.send_email(
             Source=self.email,
             Destination={"ToAddresses": [self.email]},
             Message={
@@ -55,3 +57,14 @@ class EmailSender:
                 "Body": {"Text": {"Data": error_as_str}},
             },
         )
+
+    def add_email_identity(self, email_to_verify=None):
+        email_to_verify = email_to_verify if email_to_verify else self.email
+        try:
+            response = self.ses.verify_email_identity(
+                EmailAddress=email_to_verify
+            )
+            return f"Verification email sent to {email_to_verify} with response {response}"
+        
+        except Exception as e:
+            return f"Error: {str(e)}"
