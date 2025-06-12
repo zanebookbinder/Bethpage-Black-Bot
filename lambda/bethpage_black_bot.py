@@ -29,39 +29,28 @@ class BethpageBlackBot:
 
         # GET TEE TIME DATA FROM SITE
         tee_times = web_scraper.get_tee_time_data()
-        filtered_tee_times = tee_time_filterer.filter_tee_times(tee_times)
+        print('All tee times on website:', tee_times)
 
-        # GET STORED DATA IN DYNAMO DB
-        latest_stored_times = dynamo_db_connection.get_latest_filtered_tee_times()
+        # GET ALL EMAILS FROM CONFIG TABLE
+        all_emails = dynamo_db_connection.get_all_emails_list()
 
-        # PUBLISH CURRENT TIMES TO DB
-        dynamo_db_connection.publish_teetimes(tee_times, filtered_tee_times)
+        # GET LATEST DATA FROM DYNAMO DB
+        latest_filtered_tee_times_map = dynamo_db_connection.get_latest_filtered_tee_times()
+        
+        # FILTER AND COMPARE TO PREVIOUS FOR EACH USER
+        new_filtered_tee_times_map = {}
+        for user_email in all_emails:
+            # FILTER TEE TIMES ACCORDING TO USER CONFIGURATION
+            filtered_tee_times = tee_time_filterer.filter_tee_times_for_user(tee_times, user_email)
+            previous_filtered_tee_times = latest_filtered_tee_times_map[user_email] if user_email in latest_filtered_tee_times_map else []
+            
+            # LIMIT TO TEE TIMES THAT WEREN'T OBSERVED PREVIOUSLY
+            new_tee_times = tee_time_filterer.remove_existing_tee_times(filtered_tee_times, previous_filtered_tee_times)
+            if new_tee_times: # don't need to include the user in the next round if they have no times, it will be brough in as [] (see three lines above)
+                new_filtered_tee_times_map[user_email] = new_tee_times
 
-        # SUBTRACT DB FROM CURRENT SITE
-        new_times = self.remove_existing_tee_times(
-            filtered_tee_times, latest_stored_times
-        )
+        # PUBLISH NEWEST TIMES TO DB
+        dynamo_db_connection.publish_teetimes(tee_times, new_filtered_tee_times_map)
 
-        return new_times
-
-    def remove_existing_tee_times(self, times_from_site, existing_times):
-        print("Existing times in database:", existing_times)
-
-        if existing_times:
-            # Sort existing times
-            existing_times_set = set(
-                tuple(sorted(item.items())) for item in existing_times
-            )
-
-            # Find items on current site that aren't in the existing db table
-            new_times = [
-                item
-                for item in times_from_site
-                if tuple(sorted(item.items())) not in existing_times_set
-            ]
-        else:
-            print("No existing times. Considering all times as new")
-            new_times = times_from_site
-
-        print("New times (to notify about):", new_times)
-        return new_times
+        # {user: [tee_time1, tee_time2]} mappings
+        return new_filtered_tee_times_map

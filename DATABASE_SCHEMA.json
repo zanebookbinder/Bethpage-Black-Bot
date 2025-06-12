@@ -1,0 +1,98 @@
+[
+	{
+		"table-name": "tee-times",
+		"objects": [
+			{
+				"id": "latest-tee-times",
+				"all_tee_times": [
+					{
+						"Date": "Saturday May 31st",
+						"Time": "10:00pm",
+						"Holes": "18",
+						"Players": "2"
+					}
+				],
+				"filtered_tee_times": {
+					"my.email@gmail.com": [
+						{
+							"Date": "Saturday May 31st",
+							"Time": "10:00am",
+							"Holes": "18",
+							"Players": "2"
+						}
+					],
+					"your.email@aol.com": []
+				}
+			},
+			{
+				"id": "2025-05-31T13:06:00.256401", 
+				"all_tee_times": [
+					{
+						"Date": "Saturday May 31st",
+						"Time": "5:00pm",
+						"Holes": "18",
+						"Players": "2"
+					}
+				],
+				"filtered_tee_times": {
+					"my.email@gmail.com": [
+						{
+							"Date": "Saturday May 31st",
+							"Time": "10:00am",
+							"Holes": "18",
+							"Players": "2"
+						}
+					],
+					"your.email@aol.com": []
+				}
+			}
+		]
+	},
+	{
+		"table-name": "bethpage-black-bot-config",
+		"objects": [
+			{
+				"id": "all-emails",
+				"emails": [
+					"my.email@gmail.com",
+					"your.email@aol.com"
+				]
+			},
+			{
+				"id": "my.email@gmail.com",
+				"config": {
+					"earliest_playable_time": "8:00am",
+					"extra_playable_days": [
+						"6/1/2025",
+						"7/1/2025"
+					],
+					"include_holidays": true,
+					"minimum_minutes_before_sunset": 240,
+					"min_players": 2,
+					"playable_days_of_week": [
+						"Friday",
+						"Saturday",
+						"Sunday"
+					]
+				}
+			},
+			{
+				"id": "your.email@aol.com",
+				"config": {
+					"earliest_playable_time": "11:00am",
+					"extra_playable_days": [
+						"6/5/2025",
+						"7/8/2025"
+					],
+					"include_holidays": false,
+					"minimum_minutes_before_sunset": 180,
+					"min_players": 1,
+					"playable_days_of_week": [
+						"Saturday",
+						"Sunday"
+					]
+				}
+			}
+		]
+	}
+]

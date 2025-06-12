@@ -28,11 +28,11 @@ class ApiGatewayHandler():
                 response_body = {"message": "Registered new user", "result": result}
 
             elif method == "GET" and path == "/email":
-                result = self.get_user_config(event)
-                if result:
-                    response_body = {"success": True, "message": "Retrieved user config", "result": result}
+                config_exists, config = self.get_user_config(event)
+                if config_exists:
+                    response_body = {"success": True, "message": "Retrieved user config", "result": config}
                 else:
-                    response_body = {"success": False, "message": "User config not found", "result": []}
+                    response_body = {"success": False, "message": "User config not found", "result": {}}
 
             elif method == "POST" and path == "/updateUserConfig":
                 result = self.create_or_update_user_config(event)
@@ -75,7 +75,8 @@ class ApiGatewayHandler():
     def get_user_config(self, event):
         ddc = DynamoDBConnection()
         email = event.get("queryStringParameters", {}).get("email")
-        return ddc.get_user_config(email)
+        config_or_none = ddc.get_user_config(email)
+        return (True, config_or_none) if config_or_none else (False, None)
     
     def create_or_update_user_config(self, event):
         ddc = DynamoDBConnection()
