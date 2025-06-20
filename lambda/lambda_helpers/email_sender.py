@@ -1,9 +1,16 @@
 import boto3
 from collections import defaultdict
 
+WELCOME_EMAIL_TEXT = \
+    "You've registered your email to receive notifications " \
+    "when new tee times are available for Bethpage Black. " \
+    "If you'd like to update your configuration, please visit " \
+    "the website. Thanks for joining!"
+
 class EmailSender:
 
-    def __init__(self, email=None):
+    def __init__(self, admin_email, email=None):
+        self.admin_email = admin_email
         self.email = email
         self.ses = boto3.client("ses", region_name="us-east-1")
 
@@ -38,8 +45,8 @@ class EmailSender:
 
         # Send email with HTML body
         self.ses.send_email(
-            Source=self.email,
-            Destination={"ToAddresses": [self.email]},
+            Source=self.admin_email,
+            Destination={"ToAddresses": [email]},
             Message={
                 "Subject": {"Data": "New Bethpage Tee Times Found"},
                 "Body": {"Html": {"Data": body_html}},
@@ -50,7 +57,7 @@ class EmailSender:
         email = self.email if not email else email
 
         self.ses.send_email(
-            Source=self.email,
+            Source=self.admin_email,
             Destination={"ToAddresses": [self.email]},
             Message={
                 "Subject": {"Data": "[ERROR] Bethpage Black Bot"},
@@ -68,3 +75,15 @@ class EmailSender:
         
         except Exception as e:
             return f"Error: {str(e)}"
+        
+    def send_welcome_email(self, email=None):
+        email = self.email if not email else email
+
+        self.ses.send_email(
+            Source=self.admin_email,
+            Destination={"ToAddresses": [email]},
+            Message={
+                "Subject": {"Data": "Hello from the Bethpage Black Bot!"},
+                "Body": {"Text": {"Data": WELCOME_EMAIL_TEXT}},
+            },
+        )

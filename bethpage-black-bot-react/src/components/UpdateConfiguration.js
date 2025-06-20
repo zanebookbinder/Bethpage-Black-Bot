@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   View,
   Heading,
   TextField,
+  Text,
   Button,
   Flex,
   Alert,
@@ -41,6 +42,7 @@ export default function UpdateConfiguration() {
 
   useEffect(() => {
       fetchConfig(apiBase);
+  // eslint-disable-next-line
   }, []);
 
   const fetchConfig = async (base) => {
@@ -109,10 +111,13 @@ export default function UpdateConfiguration() {
     );
 
   return (
-    <View maxWidth="600px" margin="auto" padding="2rem" >
-      <Heading level={3}>Bethpage Black Bot Config</Heading>
+    <View margin="auto"
+      style={{ display: 'inline-block' }}
+    >
+      <Heading level={3}>Update Your Settings</Heading>
+      <Text>Select the days and times you're able to play!</Text>
 
-      <Flex gap="1rem" marginTop="1.5rem" wrap="wrap">
+      <Flex gap="1rem" marginTop="1.5rem" wrap="wrap" width="auto">
         <Button onClick={pauseNotifications}>Pause Notifications</Button>
         <Button onClick={resumeNotifications} variation="primary">
           Resume Notifications
@@ -120,85 +125,89 @@ export default function UpdateConfiguration() {
       </Flex>
 
       <View as="form" onSubmit={handleSubmit} marginTop="2rem">
-	  <Flex direction="column" gap="2rem">
-		<View marginTop="1rem">
-			<Heading level={5}>Playable Days of the Week</Heading>
-			<Flex wrap="wrap" gap="1rem">
-				{['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
-				<CheckboxField
-					key={day}
-					label={day}
-					name="playable_days_of_week"
-					value={day}
-					checked={formData.playable_days_of_week.includes(day)}
-					onChange={(e) => {
-					const { checked, value } = e.target;
-					setFormData((prev) => {
-						const updatedDays = checked
-						? [...prev.playable_days_of_week, value]
-						: prev.playable_days_of_week.filter((d) => d !== value);
-						return { ...prev, playable_days_of_week: updatedDays };
-					});
-					}}
-				/>
-				))}
-			</Flex>
-		</View>
+        <Flex direction="column" gap="2rem" >
+          
+          <View marginTop="1rem" width="fit-content">
+            <Heading level={5}>Days of the Week</Heading>
+            <Flex wrap="wrap" gap="1rem">
+              {['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'].map((day) => (
+              <CheckboxField
+                key={day}
+                label={day}
+                name="playable_days_of_week"
+                value={day}
+                checked={formData.playable_days_of_week.includes(day)}
+                onChange={(e) => {
+                const { checked, value } = e.target;
+                setFormData((prev) => {
+                  const updatedDays = checked
+                  ? [...prev.playable_days_of_week, value]
+                  : prev.playable_days_of_week.filter((d) => d !== value);
+                  return { ...prev, playable_days_of_week: updatedDays };
+                });
+                }}
+              />
+              ))}
+            </Flex>
+          </View>
 
-		<View marginTop="1rem">
-			<Heading level={5}>Earliest Playable Time</Heading>
-			<TextField
-				name="earliest_playable_time"
-				type="time"
-				value={formData.earliest_playable_time}
-				onChange={handleChange}
-				required
-			/>
-		</View>
+          <View marginTop="1rem">
+            <Heading level={5}>Earliest Time</Heading>
+            <TextField
+              name="earliest_playable_time"
+              type="time"
+              width="fit-content"
+              value={formData.earliest_playable_time}
+              onChange={handleChange}
+              required
+            />
+          </View>
 
-		<ExtraPlayableDaysInput formData={formData} setFormData={setFormData}onErrorsChange={setErrors} />
+          <ExtraPlayableDaysInput formData={formData} setFormData={setFormData}onErrorsChange={setErrors} />
 
-		<View marginTop="1rem">
-			<Heading level={5}>Include Holidays</Heading>
-			<SwitchField
-				isChecked={formData.include_holidays}
-				onChange={(e) =>
-					setFormData((prev) => ({
-					...prev,
-					include_holidays: e.target.checked,
-					}))
-				}
-			/>
-		</View>
+          <View marginTop="1rem" >
+            <Heading level={5} marginBottom="1rem">Include Holidays?</Heading>
+            <SwitchField
+              isChecked={formData.include_holidays}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                ...prev,
+                include_holidays: e.target.checked,
+                }))
+              }
+            />
+          </View>
 
-		<View marginTop="1rem">
-			<Heading level={5}>Minimum Minutes Before Sunset</Heading>
-			<TextField
-			name="minimum_minutes_before_sunset"
-			type="number"
-			min={0}
-			value={formData.minimum_minutes_before_sunset}
-			onChange={handleChange}
-			required
-			/>
-		</View>
+          <View marginTop="1rem">
+            <Heading level={5}>Minimum Minutes Before Sunset</Heading>
+            <TextField
+            name="minimum_minutes_before_sunset"
+            type="number"
+            width="fit-content"
+            min={0}
+            value={formData.minimum_minutes_before_sunset}
+            onChange={handleChange}
+            required
+            />
+          </View>
 
-		<View marginTop="1rem">
-			<Heading level={5}>Minimum Players</Heading>
-			<TextField
-			name="min_players"
-			type="number"
-			min={1}
-			value={formData.min_players}
-			onChange={handleChange}
-			required
-			/>
-		</View>
+          <View marginTop="1rem">
+            <Heading level={5}>Minimum Players</Heading>
+            <TextField
+            name="min_players"
+            type="number"
+            width="fit-content"
+            min={1}
+            value={formData.min_players}
+            onChange={handleChange}
+            required
+            />
+          </View>
 
-        <Button type="submit" marginTop="1.5rem" variation="primary">
-          Save Config
-        </Button>
-	  </Flex>
+          <Button type="submit" marginTop="1.5rem" variation="primary">
+            Save Settings
+          </Button>
+        </Flex>
       </View>
 
       {statusMessage && (

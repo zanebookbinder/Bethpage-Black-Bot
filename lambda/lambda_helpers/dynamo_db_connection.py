@@ -1,6 +1,6 @@
 import boto3
 from datetime import datetime
-from bbb_config import BethpageBlackBotConfig
+from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
 
 TEE_TIMES_TABLE_NAME = "tee-times"
 CONFIG_TABLE_NAME = "bethpage-black-bot-config"
@@ -77,6 +77,10 @@ class DynamoDBConnection:
     
     def add_email_to_all_emails_list(self, new_email):
         current_list = self.get_all_emails_list()
+        if new_email in current_list:
+            print(f"Email is already in list. New email: {new_email}, List: {current_list}")
+            return
+        
         updated_emails_object = {'id': CONFIG_TABLE_ALL_EMAILS_ID, 'emails': current_list + [new_email]}
         result = self.config_table.put_item(Item=updated_emails_object)
         return result
@@ -93,10 +97,9 @@ class DynamoDBConnection:
         config_object = BethpageBlackBotConfig(new_config) # uses defaults if new_config is none
         db_item = config_object.config_to_dynamodb_item(user_email)
 
-        result1 = self.config_table.put_item(Item=db_item)
-        result2 = self.add_email_to_all_emails_list(user_email)
+        result = self.config_table.put_item(Item=db_item)
 
-        return (result1, result2)
+        return result
 
 
 # d = DynamoDBConnection()

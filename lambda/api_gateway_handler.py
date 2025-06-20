@@ -1,9 +1,13 @@
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
 from lambda_helpers.email_sender import EmailSender
+from lambda_helpers.secret_handler import SecretHandler
 from decimal import Decimal
 import json
 
 class ApiGatewayHandler():
+    def __init__(self):
+        self.sender_email = SecretHandler.get_sender_email()
+
     def handle(self, event):
         try:
             method, path = event['routeKey'].split()
@@ -63,14 +67,16 @@ class ApiGatewayHandler():
         return ddc.get_latest_tee_times_all()
     
     def register_new_user(self, event):
-        es = EmailSender()
+        ddc = DynamoDBConnection()
+        es = EmailSender(self.sender_email)
         body = json.loads(event.get("body", "{}"))
         email = body.get("email")
         
-        register_email_result = es.add_email_identity(email)
+        result = ddc.add_email_to_all_emails_list(email)
+        result2 = ddc.create_or_update_user_config(email, body)
+        result3 = es.send_welcome_email(email)
 
-        # add this email to the "emails" db object
-        # create an object with id=email in "config" db table with default config
+        return [result3]
 
     def get_user_config(self, event):
         ddc = DynamoDBConnection()
@@ -105,8 +111,8 @@ a = ApiGatewayHandler()
 
 testEvent = {
   "version": "2.0",
-  "routeKey": "POST /updateUserConfig",
-  "rawPath": "/updateUserConfig",
+  "routeKey": "POST /register",
+  "rawPath": "/register",
   "rawQueryString": "",
   "headers": {
     "content-type": "application/json"
@@ -117,7 +123,7 @@ testEvent = {
       "path": "/updateUserConfig"
     }
   },
-  "body": "{\"email\":\"olivia.wirsching@gmail.com\",\"earliest_playable_time\":\"7:30am\",\"extra_playable_days\":[\"6/20/2025\",\"7/5/2025\"],\"include_holidays\":false,\"minimum_minutes_before_sunset\":180,\"min_players\":3,\"playable_days_of_week\":[\"Friday\",\"Saturday\"]}",
+  "body": "{\"email\":\"fakeemail@gmail.com\",\"earliest_playable_time\":\"7:32am\",\"extra_playable_days\":[\"6/20/2025\",\"7/5/2025\"],\"include_holidays\":false,\"minimum_minutes_before_sunset\":7,\"min_players\":3,\"playable_days_of_week\":[\"Friday\",\"Saturday\",\"Tuesday\",\"Wednesday\",\"Monday\",\"Thursday\"]}",
   "isBase64Encoded": False
 }
 

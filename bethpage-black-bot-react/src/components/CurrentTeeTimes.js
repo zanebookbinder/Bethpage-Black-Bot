@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { CurrentTeeTime } from './CurrentTeeTime';
+import { View, Heading, Text } from '@aws-amplify/ui-react';
 
 export default function CurrentTeeTimes() {
   const [recentTeeTimes, setRecentTeeTimes] = useState([
@@ -20,7 +22,9 @@ export default function CurrentTeeTimes() {
   const apiBase = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetchCurrentTeeTimes(apiBase);
+    // fetchCurrentTeeTimes(apiBase);
+
+    // eslint-disable-next-line
   }, []);
 
   const fetchCurrentTeeTimes = async (base) => {
@@ -38,16 +42,39 @@ export default function CurrentTeeTimes() {
   };
 
   return (
-    <div>
+    <View >
       {recentTeeTimes && recentTeeTimes.length > 0 ? (
-        <div>
-          {recentTeeTimes.map((teeTime, index) => (
-            <div key={index}>{teeTime.Date}, {teeTime.Holes}, {teeTime.Time}, {teeTime.Players}</div>
-          ))}
-        </div>
+        <View>
+          {recentTeeTimes.length === 1 ? (
+            <View>
+              <Heading level={3}>There is 1 tee time available! 😄</Heading>
+              <Text>Get it before it's too late!</Text>
+            </View>
+          ) : (
+            <View>
+              <Heading level={3}>There are {recentTeeTimes.length} times available! 😄</Heading>
+              <Text>Get them before it's too late!</Text>
+            </View>
+          )}
+
+          <View marginTop="1.5rem">
+            {recentTeeTimes.map((teeTime, index) => (
+              <View key={index} marginBottom="1rem">
+                <CurrentTeeTime
+                  date={teeTime.Date}
+                  time={teeTime.Time}
+                  players={teeTime.Players}
+                />
+              </View>
+            ))}
+          </View>
+        </View>
       ) : (
-        <p>{statusMessage}</p>
+        <View>
+          <Heading level={3}>There are no tee times available 😔</Heading>
+          <Text>Check back later or sign up for alerts!</Text>
+        </View>
       )}
-    </div>
+    </View>
   );
 }

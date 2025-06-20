@@ -45,7 +45,7 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
             placeholder="e.g. 6/9/2025"
             value={date}
             onChange={(e) => updateDate(i, e.target.value)}
-            width="100%"
+            width="auto"
 			errorMessage={dateErrors[i] ? "Invalid date (format M/D/YYYY and within 1 year)" : undefined}
             hasError={dateErrors[i]}
           />

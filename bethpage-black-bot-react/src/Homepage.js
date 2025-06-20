@@ -1,25 +1,29 @@
-import React, { useState } from 'react';
-import { Tabs } from '@aws-amplify/ui-react';
+import { View, Tabs, Heading } from '@aws-amplify/ui-react';
 import CurrentTeeTimes from './components/CurrentTeeTimes';
 import UpdateConfiguration from './components/UpdateConfiguration';
 import SignUpMenu from './components/SignUpMenu';
+import TabWrapper from './TabWrapper';
 
 export default function Homepage() {
-  const [activeTab, setActiveTab] = useState('home');
 
   return (
-    <div style={{ maxWidth: 600, margin: 'auto', padding: 20 }}>
-      <h1>Bethpage Black Bot</h1>
+    <div style={{ maxWidth: 700, margin: 'auto', padding: 20, backgroundColor: "rgb(176, 208, 166)",
+      boxShadow: "0px 4px 12px rgba(0,0,0,0.1)", borderRadius: "1rem"
+     }}>
+      <Heading level={2} fontWeight="medium" textAlign="center"> Bethpage Black Bot</Heading>
 
-      <Tabs
-        justifyContent="flex-start"
-        defaultValue='Tab 1'
-        items={[
-          { label: 'Bethpage Black tee times', value: 'Bethpage Black tee times', content: <CurrentTeeTimes /> },
-          { label: 'Sign up', value: 'Sign up', content: <SignUpMenu /> },
-          { label: 'Update configuration', value: 'Update configuration', content: <UpdateConfiguration /> },
-        ]}
-      />
+      <View display="flex" justifyContent="center" marginTop="1rem">
+        <View>
+          <Tabs
+            defaultValue={'tee-times'}
+            items={[
+              { label: 'Current Tee Times', value: 'tee-times', content: <TabWrapper component={<CurrentTeeTimes />} /> },
+              { label: 'Sign up', value: 'sign-up', content: <TabWrapper component={<SignUpMenu />} /> },
+              { label: 'Update configuration', value: 'update-configuration', content: <TabWrapper component={<UpdateConfiguration />} /> },
+            ]}
+          />
+        </View>
+    </View>
   </div>
   );
 }

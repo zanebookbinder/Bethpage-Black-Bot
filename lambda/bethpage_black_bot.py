@@ -5,11 +5,14 @@ from lambda_helpers.tee_time_filterer import TeeTimeFilterer
 from lambda_helpers.web_scraper import WebScraper
 import traceback
 
+
 class BethpageBlackBot:
     def notify_if_new_tee_times(self):
-        secret_handler = SecretHandler()
-        self.email, self.password = secret_handler.get_username_and_password()
-        email_sender = EmailSender(self.email)
+        self.bethpage_email, self.bethpage_password = (
+            SecretHandler.get_bethpage_username_and_password()
+        )
+        self.sender_email = SecretHandler.get_sender_email()
+        email_sender = EmailSender(self.sender_email)
         try:
             new_times = self.get_new_tee_times()
             if new_times:
@@ -23,30 +26,42 @@ class BethpageBlackBot:
             raise e
 
     def get_new_tee_times(self):
-        web_scraper = WebScraper(self.email, self.password)
+        web_scraper = WebScraper(self.bethpage_email, self.bethpage_password)
         dynamo_db_connection = DynamoDBConnection()
         tee_time_filterer = TeeTimeFilterer()
 
         # GET TEE TIME DATA FROM SITE
         tee_times = web_scraper.get_tee_time_data()
-        print('All tee times on website:', tee_times)
+        print("All tee times on website:", tee_times)
 
         # GET ALL EMAILS FROM CONFIG TABLE
         all_emails = dynamo_db_connection.get_all_emails_list()
 
         # GET LATEST DATA FROM DYNAMO DB
-        latest_filtered_tee_times_map = dynamo_db_connection.get_latest_filtered_tee_times()
-        
+        latest_filtered_tee_times_map = (
+            dynamo_db_connection.get_latest_filtered_tee_times()
+        )
+
         # FILTER AND COMPARE TO PREVIOUS FOR EACH USER
         new_filtered_tee_times_map = {}
         for user_email in all_emails:
             # FILTER TEE TIMES ACCORDING TO USER CONFIGURATION
-            filtered_tee_times = tee_time_filterer.filter_tee_times_for_user(tee_times, user_email)
-            previous_filtered_tee_times = latest_filtered_tee_times_map[user_email] if user_email in latest_filtered_tee_times_map else []
-            
+            filtered_tee_times = tee_time_filterer.filter_tee_times_for_user(
+                tee_times, user_email
+            )
+            previous_filtered_tee_times = (
+                latest_filtered_tee_times_map[user_email]
+                if user_email in latest_filtered_tee_times_map
+                else []
+            )
+
             # LIMIT TO TEE TIMES THAT WEREN'T OBSERVED PREVIOUSLY
-            new_tee_times = tee_time_filterer.remove_existing_tee_times(filtered_tee_times, previous_filtered_tee_times)
-            if new_tee_times: # don't need to include the user in the next round if they have no times, it will be brough in as [] (see three lines above)
+            new_tee_times = tee_time_filterer.remove_existing_tee_times(
+                filtered_tee_times, previous_filtered_tee_times
+            )
+            if (
+                new_tee_times
+            ):  # don't need to include the user in the next round if they have no times, it will be brough in as [] (see three lines above)
                 new_filtered_tee_times_map[user_email] = new_tee_times
 
         # PUBLISH NEWEST TIMES TO DB
