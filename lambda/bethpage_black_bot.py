@@ -7,16 +7,16 @@ import traceback
 
 
 class BethpageBlackBot:
+
     def notify_if_new_tee_times(self):
         self.bethpage_email, self.bethpage_password = (
             SecretHandler.get_bethpage_username_and_password()
         )
-        self.sender_email = SecretHandler.get_sender_email()
-        email_sender = EmailSender(self.sender_email)
+        email_sender = EmailSender()
         try:
             new_times = self.get_new_tee_times()
-            if new_times:
-                email_sender.send_email(new_times)
+            for email, new_times_list in new_times.items():
+                email_sender.send_email(email, new_times_list)
         except Exception as e:
             print("Exception:", e)
             error_message = (
@@ -45,6 +45,7 @@ class BethpageBlackBot:
         # FILTER AND COMPARE TO PREVIOUS FOR EACH USER
         new_filtered_tee_times_map = {}
         for user_email in all_emails:
+
             # FILTER TEE TIMES ACCORDING TO USER CONFIGURATION
             filtered_tee_times = tee_time_filterer.filter_tee_times_for_user(
                 tee_times, user_email

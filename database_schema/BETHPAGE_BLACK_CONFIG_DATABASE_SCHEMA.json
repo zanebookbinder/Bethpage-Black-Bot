@@ -1,0 +1,57 @@
+{
+    "table-name": "bethpage-black-bot-config",
+    "objects": [
+        {
+            "id": "all-emails",
+            "emails": [
+                "my.email@gmail.com",
+                "your.email@aol.com",
+                "third.email@yahoo.com"
+            ]
+        },
+        {
+            "id": "my.email@gmail.com",
+            "all_tee_times": [
+                {
+                    "Date": "Saturday May 31st",
+                    "Time": "10:00pm",
+                    "Holes": "18",
+                    "Players": "2"
+                }
+            ],
+            "filtered_tee_times": {
+                "my.email@gmail.com": [
+                    {
+                        "Date": "Saturday May 31st",
+                        "Time": "10:00am",
+                        "Holes": "18",
+                        "Players": "2"
+                    }
+                ],
+                "your.email@aol.com": []
+            }
+        },
+        {
+            "id": "2025-05-31T13:06:00.256401",
+            "all_tee_times": [
+                {
+                    "Date": "Saturday May 31st",
+                    "Time": "5:00pm",
+                    "Holes": "18",
+                    "Players": "2"
+                }
+            ],
+            "filtered_tee_times": {
+                "my.email@gmail.com": [
+                    {
+                        "Date": "Saturday May 31st",
+                        "Time": "10:00am",
+                        "Holes": "18",
+                        "Players": "2"
+                    }
+                ],
+                "your.email@aol.com": []
+            }
+        }
+    ]
+}

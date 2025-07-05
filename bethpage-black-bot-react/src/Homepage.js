@@ -1,8 +1,8 @@
 import { View, Tabs, Heading } from '@aws-amplify/ui-react';
 import CurrentTeeTimes from './components/CurrentTeeTimes';
-import UpdateConfiguration from './components/UpdateConfiguration';
 import SignUpMenu from './components/SignUpMenu';
 import TabWrapper from './TabWrapper';
+import GetOneTimeLink from './components/GetOneTimeLink';
 
 export default function Homepage() {
 
@@ -19,7 +19,7 @@ export default function Homepage() {
             items={[
               { label: 'Current Tee Times', value: 'tee-times', content: <TabWrapper component={<CurrentTeeTimes />} /> },
               { label: 'Sign up', value: 'sign-up', content: <TabWrapper component={<SignUpMenu />} /> },
-              { label: 'Update configuration', value: 'update-configuration', content: <TabWrapper component={<UpdateConfiguration />} /> },
+              { label: 'Update Your Notification Settings', value: 'update-notification-settings', content: <TabWrapper component={<GetOneTimeLink />} /> },
             ]}
           />
         </View>

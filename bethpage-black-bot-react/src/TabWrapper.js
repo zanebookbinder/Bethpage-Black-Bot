@@ -9,6 +9,7 @@ export default function TabWrapper({component}) {
 			borderRadius="1rem"
 			marginTop="1rem"
 			padding="2rem"
+			marginInline={"auto"}
 		>
 			{component}
 		</View>

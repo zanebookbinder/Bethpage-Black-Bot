@@ -3,8 +3,8 @@ from astral import LocationInfo
 from datetime import datetime, timedelta
 from lambda_helpers.date_handler import DateHandler
 import holidays
-from decimal import Decimal
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
+from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
 
 class TeeTimeFilterer():
 
@@ -21,8 +21,12 @@ class TeeTimeFilterer():
             raise e
         
     def filter_tee_times_for_user(self, tee_times_to_consider, user_email):
-        print('Setting config for user:', user_email)
-        self.set_user_config(user_email)
+        print('Getting config for user:', user_email)
+        user_config = self.get_user_config_as_object(user_email)
+
+        if not user_config.notifications_enabled:
+            print('User doesn\'t have notifications enabled. Continuing...')
+            return []
 
         filtered_tee_times = []
 
@@ -31,15 +35,15 @@ class TeeTimeFilterer():
             day_of_week, date_obj = self.parse_date_string(tee_time['Date'])
 
             # is ok day (weekend, holiday, etc.)
-            is_playable_day = self.is_playable_day(day_of_week, date_obj)
+            is_playable_day = self.is_playable_day(user_config, day_of_week, date_obj)
 
             # is acceptable time (after min time and before sunset)
             tee_time_of_day = datetime.strptime(tee_time['Time'], "%I:%M%p").time()
-            is_acceptable_time = self.is_far_enough_before_sunset(date_obj, tee_time_of_day) \
-                and self.is_after_earliest_acceptable_time(tee_time_of_day)
+            is_acceptable_time = self.is_far_enough_before_sunset(user_config, date_obj, tee_time_of_day) \
+                and self.is_after_earliest_acceptable_time(user_config, tee_time_of_day)
             
-            # is minimum number of players
-            hits_min_players = int(tee_time['Players']) >= self.min_players
+            # is greater than the minimum number of players
+            hits_min_players = int(tee_time['Players']) >= user_config.min_players
 
             # then yes, this tee time is ok
             if is_playable_day and is_acceptable_time and hits_min_players:
@@ -48,13 +52,13 @@ class TeeTimeFilterer():
         print('Tee times after filtering:', filtered_tee_times)
         return filtered_tee_times
 
-    def is_after_earliest_acceptable_time(self, time_of_day):
-        earliest_playable_time_as_dt = datetime.strptime(self.earliest_playable_time, "%I:%M%p").time()
+    def is_after_earliest_acceptable_time(self, user_config, time_of_day):
+        earliest_playable_time_as_dt = datetime.strptime(user_config.earliest_playable_time, "%I:%M%p").time()
         return time_of_day > earliest_playable_time_as_dt
 
-    def is_far_enough_before_sunset(self, date_obj, time_of_day):
+    def is_far_enough_before_sunset(self, user_config, date_obj, time_of_day):
         sunset_time = sun(self.bethpage_info.observer, date=date_obj, tzinfo=self.bethpage_info.timezone)['sunset']
-        before_sunset_dt = sunset_time - timedelta(minutes=self.minimum_minutes_before_sunset)
+        before_sunset_dt = sunset_time - timedelta(minutes=user_config.minimum_minutes_before_sunset)
 
         return time_of_day < before_sunset_dt.time()
     
@@ -73,46 +77,21 @@ class TeeTimeFilterer():
     def get_day_of_week_from_str(self, date_str):
         return date_str.split()[0]
     
-    def is_playable_day(self, day_of_week, date_obj):
-        is_playable_day_of_week = day_of_week in self.playable_days_of_week
+    def is_playable_day(self, user_config, day_of_week, date_obj):
+        is_playable_day_of_week = day_of_week in user_config.playable_days_of_week
         
         formatted = f"{date_obj.month}/{date_obj.day}/{date_obj.year}"
-        is_extra_day_to_notify = formatted in self.extra_playable_days
+        is_extra_day_to_notify = formatted in user_config.extra_playable_days
 
         is_us_holiday = formatted in self.holiday_dates \
-            if self.include_holidays \
+            if user_config.include_holidays \
             else False
 
         return is_playable_day_of_week or is_extra_day_to_notify or is_us_holiday
     
-    def set_user_config(self, user_email):
+    def get_user_config_as_object(self, user_email):
         config_data = self.db_table.get_user_config(user_email)
-
-        if not config_data:
-            # Fallback defaults if no config found
-            self.playable_days_of_week = ["Saturday", "Sunday"]
-            self.earliest_playable_time = "8:00am"
-            self.extra_playable_days = ["6/19/2025", "7/3/2025", "7/4/2025", "8/29/2025", "9/1/2025"]
-            self.include_holidays = True
-            self.minimum_minutes_before_sunset = 240
-            self.min_players = 2
-            return
-
-        def convert_decimal(value):
-            # Convert DynamoDB Decimal to int if possible
-            if isinstance(value, Decimal):
-                if value % 1 == 0:
-                    return int(value)
-                else:
-                    return float(value)
-            return value
-
-        self.playable_days_of_week = config_data.get("playable_days_of_week", ["Saturday", "Sunday"])
-        self.earliest_playable_time = config_data.get("earliest_playable_time", "8:00am")
-        self.extra_playable_days = config_data.get("extra_playable_days", ["6/19/2025", "7/3/2025", "7/4/2025", "8/29/2025", "9/1/2025"])
-        self.include_holidays = config_data.get("include_holidays", True)
-        self.minimum_minutes_before_sunset = convert_decimal(config_data.get("minimum_minutes_before_sunset", 240))
-        self.min_players = convert_decimal(config_data.get("min_players", 2))
+        return BethpageBlackBotConfig(config_data)
 
     def output_current_config(self):
         print(

@@ -12,10 +12,10 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
     newDates[index] = value;
     setFormData(prev => ({ ...prev, extra_playable_days: newDates }));
 
-	const newErrors = [...dateErrors];
+    const newErrors = [...dateErrors];
     newErrors[index] = !isValidDateWithinOneYear(value);
     setDateErrors(newErrors);
-	onErrorsChange(newErrors.some(Boolean));
+    onErrorsChange(newErrors.some(Boolean));
   };
 
   const addDate = () => {
@@ -23,7 +23,7 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
       ...prev,
       extra_playable_days: [...prev.extra_playable_days, ''],
     }));
-	setDateErrors(prev => [...prev, false]);
+	  setDateErrors(prev => [...prev, false]);
   };
 
   const removeDate = (index) => {
@@ -31,23 +31,34 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
     const newDates = dates.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, extra_playable_days: newDates }));
 
-	const newErrors = dateErrors.filter((_, i) => i !== index);
+	  const newErrors = dateErrors.filter((_, i) => i !== index);
     setDateErrors(newErrors);
-	onErrorsChange(newErrors.some(Boolean));
+	  onErrorsChange(newErrors.some(Boolean));
   };
 
   return (
     <View marginTop="1rem">
 		<Heading level={5}>Extra Playable Days</Heading>
+    <TextField
+        width="fit-content"
+        descriptiveText="What additional days could you play?"
+        inputStyles={{ display: 'none' }}
+        gap={"0.25rem"}
+    />
       {dates.map((date, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
-          <TextField
-            placeholder="e.g. 6/9/2025"
+        <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: "1rem" }}>
+          <input
+            type="date"
             value={date}
             onChange={(e) => updateDate(i, e.target.value)}
-            width="auto"
-			errorMessage={dateErrors[i] ? "Invalid date (format M/D/YYYY and within 1 year)" : undefined}
-            hasError={dateErrors[i]}
+            style={{
+              padding: '8px 12px',
+              borderRadius: '6px',
+              border: '1px solid #89949f',
+              marginRight: '8px',
+              fontSize: '1rem',
+              minWidth: '180px',
+            }}
           />
           <Button
             variation="link"
@@ -59,9 +70,7 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
           </Button>
         </div>
       ))}
-
-      <Button type="button" onClick={addDate} variation="primary" style={{ marginBottom: 12 }} 
-	  	isDisabled={dates[dates.length - 1] === ""}>
+      <Button type="button" onClick={addDate} variation="primary" isDisabled={dates[dates.length - 1] === ""}>
         Add New Date
       </Button>
     </View>

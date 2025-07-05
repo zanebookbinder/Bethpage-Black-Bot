@@ -20,6 +20,7 @@ export function convertTo12Hour(timeStr) {
 	}
 
 export function isValidDateWithinOneYear(dateStr) {
+	return true;
 		// Check format with regex: M or MM / D or DD / YYYY
 		const regex = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/;
 		const match = dateStr.match(regex);

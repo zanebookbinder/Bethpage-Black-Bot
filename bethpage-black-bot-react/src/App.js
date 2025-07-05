@@ -1,13 +1,12 @@
-import './App.css';
-import '@aws-amplify/ui-react/styles.css';
-import Homepage from './Homepage.js';
+import { Routes, Route } from 'react-router-dom';
+import Homepage from './Homepage';
+import OneTimeLinkValidator from './components/OneTimeLinkValidator';
 
-function App() {
+export default function App() {
   return (
-    <div style={{backgroundColor: "white", padding: "3rem", width: "100vw", height: "100vh"}}>
-      <Homepage />
-    </div>
-  )
+    <Routes>
+      <Route path="/" element={<Homepage />} />
+      <Route path="/updateSettings/:guid" element={<OneTimeLinkValidator />} />
+    </Routes>
+  );
 }
-
-export default App;

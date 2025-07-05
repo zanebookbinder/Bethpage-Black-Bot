@@ -21,7 +21,7 @@ export default function SignupMenu() {
             label="Email address"
             name="email"
             type="email"
-            placeholder="tiger.woods@goat.com"
+            placeholder="tiger.woods@nike.com"
             isRequired
           />
           <Button variation="primary" type="submit">
