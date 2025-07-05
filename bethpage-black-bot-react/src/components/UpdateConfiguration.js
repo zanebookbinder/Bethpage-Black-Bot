@@ -8,12 +8,14 @@ import {
     Flex,
     Alert,
     CheckboxField,
+    Loader
 } from "@aws-amplify/ui-react";
-import { convertTo12Hour, convertTo24Hour } from "../utils";
+import { convertTo12Hour, convertTo24Hour, isValidDateWithinOneYear } from "../utils";
 import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
 import ToggleButtonPair from "./ToggleButtonPair";
 
-export default function UpdateConfiguration({ email }) {
+export default function UpdateNotificationSettingsForm({ email }) {
+    const [loading, setLoading] = useState(true);
     const [userSettings, setUserSettings] = useState({
         playable_days_of_week: [],
         earliest_playable_time: convertTo24Hour("8:00am"),
@@ -24,7 +26,7 @@ export default function UpdateConfiguration({ email }) {
         notifications_enabled: false,
     });
     const [notificationsCurrentlyEnabled, setNotificationsCurrentlyEnabled] =
-        useState(false);
+        useState(null);
 
     const [errors, setErrors] = useState(false);
 
@@ -78,6 +80,8 @@ export default function UpdateConfiguration({ email }) {
         } catch (err) {
             setStatusMessage("Failed to fetch current settings");
             setStatusLevel("warning");
+        } finally {
+            setLoading(false);
         }
     };
 
@@ -96,8 +100,18 @@ export default function UpdateConfiguration({ email }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
+        const invalidDate = userSettings.extra_playable_days.find(
+            (date) => !isValidDateWithinOneYear(date)
+        );
+
+        if (invalidDate) {
+            setStatusMessage("Found error in date: " + invalidDate + ". Must be in the future and within one year.");
+            setStatusLevel("error");
+            return;
+        }
+
         if (errors) {
-            setStatusMessage("Errors found in settings. Updates not saved.");
+            setStatusMessage("Errors found in form. Updates not saved.");
             setStatusLevel("warning");
             return;
         }
@@ -152,6 +166,14 @@ export default function UpdateConfiguration({ email }) {
             include_holidays: includeHolidays,
         }));
     };
+
+    if (loading) {
+        return (
+            <View padding="2rem">
+                <Loader variation="linear" />
+            </View>
+        );
+    }
 
     return (
         <View margin="auto" style={{ display: "inline-block" }}>

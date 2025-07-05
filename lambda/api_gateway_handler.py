@@ -3,6 +3,7 @@ from lambda_helpers.email_sender import EmailSender
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
 from decimal import Decimal
 import json
+import traceback
 
 class ApiGatewayHandler:
     def __init__(self):
@@ -61,11 +62,12 @@ class ApiGatewayHandler:
 
             # CREATES A ONE TIME LINK AND EMAILS IT TO THE USER
             elif method == "GET" and path == "/createOneTimeLink":
-                result = self.create_one_time_link_and_send(event)
+                success, result = self.create_one_time_link_and_send(event)
+                message = "Created one time link and sent to user" if success else result
                 response_body = {
-                    "message": "Created one time link and sent to user",
+                    "message": message,
                     "result": result,
-                    "success": True
+                    "success": success
                 }
 
             # VALIDATES THAT A ONE TIME LINK EXISTS AND RETURNS THE USER
@@ -93,7 +95,8 @@ class ApiGatewayHandler:
             return self.get_api_response(response_body, status_code)
         except Exception as e:
             print("ERROR: " + str(e))
-            response_body = {"Error during API route processing:", str(e)}
+            traceback.print_exc()
+            response_body = {"Error": "Error during API route processing:" + str(e)}
             return self.get_api_response(response_body, 404)
 
     def get_config_from_dynamo_db(self):
@@ -121,9 +124,9 @@ class ApiGatewayHandler:
 
         return [result3]
 
-    def get_user_config(self, event):
+    def get_user_config(self, event, email=None):
         ddc = DynamoDBConnection()
-        email = event.get("queryStringParameters", {}).get("email")
+        email = email if email else event.get("queryStringParameters", {}).get("email")
         config_or_none = ddc.get_user_config(email)
         return (True, config_or_none) if config_or_none else (False, None)
 
@@ -137,22 +140,27 @@ class ApiGatewayHandler:
     def create_one_time_link_and_send(self, event):
         # GET THE USER'S EMAIL FROM EVENT
         user_email = event.get("queryStringParameters", {}).get("email")
+        found_user, _ = self.get_user_config(event, user_email)
+        if not found_user:
+            response_str = f"Tried to get one time link for email that wasn't registered: {user_email}"
+            print(response_str)
+            return False, response_str
 
         # CREATE, SAVE, AND EMAIL THE LINK
         otlh = OneTimeLinkHandler()
         result = otlh.handle_one_time_link_creation(user_email)
-        return result
+        return True, result
     
     def validate_one_time_link(self, event):
         # GET THE CURRENT GUID
         guid_in_browser = event.get("queryStringParameters", {}).get("guid")
 
         otlh = OneTimeLinkHandler()
-        successAsBool, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(guid_in_browser)
+        is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(guid_in_browser)
 
-        print(f"Validated one time link. Success={successAsBool}, Email or error message={emailOrErrorMessage}")
+        print(f"Validated one time link. Success={is_link_valid}, Email or error message={emailOrErrorMessage}")
         # result = (True, email) OR (False, error message)
-        return successAsBool, emailOrErrorMessage
+        return is_link_valid, emailOrErrorMessage
 
     def get_api_response(self, body, status_code):
         if not isinstance(body, str):

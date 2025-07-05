@@ -40,7 +40,7 @@ export default function GetOneTimeLink() {
         setStatusType('success');
         setEmail('');
       } else {
-        setStatusMessage('Failed to send link. Please try again.');
+        setStatusMessage('Failed to send link. ' + data.message);
         setStatusType('error');
       }
     } catch (error) {

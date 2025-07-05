@@ -1,6 +1,6 @@
 import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
-import { View, Alert, Loader } from "@aws-amplify/ui-react";
+import { View, Alert, Loader, Link, Heading, Flex } from "@aws-amplify/ui-react";
 import UpdateConfiguration from "./UpdateConfiguration";
 
 export default function OneTimeLinkValidator() {
@@ -44,9 +44,10 @@ export default function OneTimeLinkValidator() {
 
   if (errorMessage) {
     return (
-      <View padding="2rem" maxWidth="40rem" margin="auto">
-        <Alert variation="error">{errorMessage}</Alert>
-      </View>
+      <Flex direction="column" padding="2rem" maxWidth="40rem" margin="auto" alignItems="center">
+        <Alert borderRadius={10} variation="error">{errorMessage}</Alert>
+        <Link href="/"><Heading level={5}>Click here to go home</Heading></Link>
+      </Flex>
     );
   }
 
