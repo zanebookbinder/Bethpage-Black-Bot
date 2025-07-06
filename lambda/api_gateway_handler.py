@@ -29,7 +29,7 @@ class ApiGatewayHandler:
             # GETS MOST RECENTLY-SCRAPED TEE TIMES
             elif method == "GET" and path == "/getRecentTimes":
                 recentTimes = self.get_recent_times_from_db()
-                response_body = {"message": "Config retrieved", "result": recentTimes}
+                response_body = {"message": "Recent times retrieved", "result": recentTimes}
 
             # REGISTERS A NEW USER
             elif method == "POST" and path == "/register":

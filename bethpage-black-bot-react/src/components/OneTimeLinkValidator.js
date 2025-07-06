@@ -2,6 +2,7 @@ import { useParams } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { View, Alert, Loader, Link, Heading, Flex } from "@aws-amplify/ui-react";
 import UpdateConfiguration from "./UpdateConfiguration";
+import { API_BASE_URL } from "../utils";
 
 export default function OneTimeLinkValidator() {
   const { guid } = useParams();
@@ -9,12 +10,11 @@ export default function OneTimeLinkValidator() {
   const [errorMessage, setErrorMessage] = useState("");
   const [loading, setLoading] = useState(true);
 
-  const apiBase = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
     const validateGuid = async () => {
       try {
-        const res = await fetch(`${apiBase}/validateOneTimeLink?guid=${guid}`);
+        const res = await fetch(`${API_BASE_URL}/validateOneTimeLink?guid=${guid}`);
         const data = await res.json();
 
         if (data.email) {

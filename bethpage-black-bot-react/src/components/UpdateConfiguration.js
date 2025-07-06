@@ -13,6 +13,7 @@ import {
 import { convertTo12Hour, convertTo24Hour, isValidDateWithinOneYear } from "../utils";
 import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
 import ToggleButtonPair from "./ToggleButtonPair";
+import { API_BASE_URL } from "../utils";
 
 export default function UpdateNotificationSettingsForm({ email }) {
     const [loading, setLoading] = useState(true);
@@ -44,8 +45,6 @@ export default function UpdateNotificationSettingsForm({ email }) {
         return () => clearTimeout(timer);
     }, [statusMessage]);
 
-    const apiBase = process.env.REACT_APP_API_URL;
-
     useEffect(() => {
         fetchConfig();
         // eslint-disable-next-line
@@ -54,7 +53,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
     const fetchConfig = async () => {
         try {
             const res = await fetch(
-                `${apiBase}/getUserConfig?email=${encodeURIComponent(email)}`
+                `${API_BASE_URL}/getUserConfig?email=${encodeURIComponent(email)}`
             );
             const response = await res.json();
 
@@ -136,7 +135,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
             email: email,
         };
 
-        const res = await fetch(`${apiBase}/updateUserConfig`, {
+        const res = await fetch(`${API_BASE_URL}/updateUserConfig`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(payload),

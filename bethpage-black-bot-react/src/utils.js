@@ -1,3 +1,5 @@
+export const API_BASE_URL = "https://api.bethpage-black-bot.com";
+
 export function convertTo24Hour(timeStr) {
     const [time, modifier] = timeStr.toLowerCase().split(/(am|pm)/);
     let [hours, minutes] = time.trim().split(":").map(Number);

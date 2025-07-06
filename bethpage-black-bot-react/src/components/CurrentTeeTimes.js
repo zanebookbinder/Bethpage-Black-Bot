@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { CurrentTeeTime } from './CurrentTeeTime';
 import { View, Heading, Text, Link, Flex } from '@aws-amplify/ui-react';
+import { API_BASE_URL } from '../utils';
 
 export default function CurrentTeeTimes() {
   const [recentTeeTimes, setRecentTeeTimes] = useState([
@@ -17,16 +18,15 @@ export default function CurrentTeeTimes() {
     //   "Time": "5:20pm"
     // }
   ] );
-  const apiBase = process.env.REACT_APP_API_URL;
 
   useEffect(() => {
-    fetchCurrentTeeTimes(apiBase);
+    fetchCurrentTeeTimes();
 
     // eslint-disable-next-line
   }, []);
 
-  const fetchCurrentTeeTimes = async (base) => {
-    const res = await fetch(`${base}/getRecentTimes`);
+  const fetchCurrentTeeTimes = async () => {
+    const res = await fetch(`${API_BASE_URL}/getRecentTimes`);
     const data = await res.json();
     setRecentTeeTimes(data['result']);
   };

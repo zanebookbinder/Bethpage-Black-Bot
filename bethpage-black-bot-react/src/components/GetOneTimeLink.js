@@ -9,9 +9,9 @@ import {
   Alert,
 } from '@aws-amplify/ui-react';
 import '@aws-amplify/ui-react/styles.css';
+import { API_BASE_URL } from '../utils';
 
 export default function GetOneTimeLink() {
-  const apiBase = process.env.REACT_APP_API_URL;
   
   const [email, setEmail] = useState('');
   const [statusMessage, setStatusMessage] = useState('');
@@ -32,7 +32,7 @@ export default function GetOneTimeLink() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${apiBase}/createOneTimeLink?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`${API_BASE_URL}/createOneTimeLink?email=${encodeURIComponent(email)}`);
       const data = await res.json();
 
       if (res.ok && data.success) {
