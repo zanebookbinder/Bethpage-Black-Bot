@@ -12,7 +12,7 @@ UPDATE_USER_CONFIG_PATH="/updateUserConfig"
 VALIDATE_ONE_TIME_LINK_PATH="/validateOneTimeLink"
 CREATE_ONE_TIME_LINK_PATH="/createOneTimeLink"
 
-ALLOWED_ORIGINS='["http://localhost:3000"]'
+ALLOWED_ORIGINS='["http://localhost:3000", "https://www.bethpage-black-bot.com"]'
 
 # ---------- 1. Get or Create API Gateway ----------
 echo "Checking for existing API named '$API_NAME'..."

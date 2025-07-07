@@ -35,17 +35,6 @@ export default function UpdateNotificationSettingsForm({ email }) {
     const [statusLevel, setStatusLevel] = useState("info");
 
     useEffect(() => {
-        if (!statusMessage) return; // no status, no timer
-
-        const timer = setTimeout(() => {
-            setStatusMessage("");
-        }, 5000);
-
-        // Cleanup on unmount or before next effect run
-        return () => clearTimeout(timer);
-    }, [statusMessage]);
-
-    useEffect(() => {
         fetchConfig();
         // eslint-disable-next-line
     }, []);
