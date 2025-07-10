@@ -3,8 +3,13 @@ import { useState } from 'react';
 import { isValidDateWithinOneYear } from '../utils';
 
 export default function ExtraPlayableDaysInput({ formData, setFormData, onErrorsChange }) {
-  const dates = formData?.extra_playable_days || [''];
-
+  const dates = (formData?.extra_playable_days || ['']).map(d => {
+    if (d.includes('/')) {
+      const [month, day, year] = d.split('/');
+      return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    }
+    return d;
+  });
   const [dateErrors, setDateErrors] = useState(dates.map(() => false))
 
   const updateDate = (index, value) => {
