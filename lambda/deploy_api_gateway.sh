@@ -4,7 +4,6 @@
 LAMBDA_NAME="bethpage-black-bot"
 API_NAME="bethpage-black-bot-api"
 STAGE_NAME="prod"
-CONFIG_ROUTE_PATH="/config"
 RECENT_TIMES_ROUTE_PATH="/getRecentTimes"
 REGISTER_ROUTE_PATH="/register"
 GET_USER_CONFIG_PATH="/getUserConfig"
@@ -51,14 +50,12 @@ echo "Integration ID: $INTEGRATION_ID"
 # ---------- 4. Create Routes ----------
 echo "Creating routes..."
 ROUTES=(
-  "GET $CONFIG_ROUTE_PATH"
-  "POST $CONFIG_ROUTE_PATH"
   "GET $RECENT_TIMES_ROUTE_PATH"
   "POST $REGISTER_ROUTE_PATH"
-  "GET $GET_USER_CONFIG_PATH"
+  "POST $GET_USER_CONFIG_PATH"
   "POST $UPDATE_USER_CONFIG_PATH"
-  "GET $CREATE_ONE_TIME_LINK_PATH"
-  "GET $VALIDATE_ONE_TIME_LINK_PATH"
+  "POST $CREATE_ONE_TIME_LINK_PATH"
+  "POST $VALIDATE_ONE_TIME_LINK_PATH"
 )
 
 for ROUTE_KEY in "${ROUTES[@]}"; do

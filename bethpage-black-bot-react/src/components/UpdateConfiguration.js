@@ -41,9 +41,14 @@ export default function UpdateNotificationSettingsForm({ email }) {
 
     const fetchConfig = async () => {
         try {
-            const res = await fetch(
-                `${API_BASE_URL}/getUserConfig?email=${encodeURIComponent(email)}`
-            );
+            const res = await fetch(`${API_BASE_URL}/getUserConfig`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify({ email }),
+            });
+
             const response = await res.json();
 
             if (response.success) {

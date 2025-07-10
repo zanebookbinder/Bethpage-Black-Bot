@@ -14,7 +14,13 @@ export default function OneTimeLinkValidator() {
   useEffect(() => {
     const validateGuid = async () => {
       try {
-        const res = await fetch(`${API_BASE_URL}/validateOneTimeLink?guid=${guid}`);
+        const res = await fetch(`${API_BASE_URL}/validateOneTimeLink`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ "guid": guid }),
+        });
         const data = await res.json();
 
         if (data.email) {

@@ -32,7 +32,13 @@ export default function GetOneTimeLink() {
 
     try {
       setIsSubmitting(true);
-      const res = await fetch(`${API_BASE_URL}/createOneTimeLink?email=${encodeURIComponent(email)}`);
+      const res = await fetch(`${API_BASE_URL}/createOneTimeLink`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ "email": email }),
+      });
       const data = await res.json();
 
       if (res.ok && data.success) {

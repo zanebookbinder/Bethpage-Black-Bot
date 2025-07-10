@@ -8,8 +8,25 @@ import traceback
 class ApiGatewayHandler:
     def __init__(self):
         self.email_sender = EmailSender()
+        self.verbose = False
 
     def handle(self, event):
+        headers = event.get("headers", {})
+        origin = headers.get("origin") or headers.get("Origin")
+
+        if self.verbose:
+            print("EVENT", event)
+            print("HEADERS", headers)
+            print("ORIGIN", origin)
+
+        allowed_origins = ["http://localhost:3000", "https://www.bethpage-black-bot.com"]
+
+        if origin not in allowed_origins:
+            return {
+                "statusCode": 403,
+                "body": "Forbidden: Invalid origin"
+            }
+        
         try:
             method, path = event["routeKey"].split()
             print(f"API call to route {path} with method {method}")
@@ -17,17 +34,8 @@ class ApiGatewayHandler:
             response_body = {}
             status_code = 200
 
-            # RETURNS THE USER CONFIG
-            if method == "GET" and path == "/config":
-                response_body = self.get_config_from_dynamo_db()
-
-            # UPDATES USER CONFIG
-            elif method == "POST" and path == "/config":
-                result = self.save_config_to_dynamo_db(event)
-                response_body = {"message": "Config updated", "result": result}
-
             # GETS MOST RECENTLY-SCRAPED TEE TIMES
-            elif method == "GET" and path == "/getRecentTimes":
+            if method == "GET" and path == "/getRecentTimes":
                 recentTimes = self.get_recent_times_from_db()
                 response_body = {"message": "Recent times retrieved", "result": recentTimes}
 
@@ -37,7 +45,7 @@ class ApiGatewayHandler:
                 response_body = {"message": "Registered new user", "result": result}
 
             # GETS USER CONFIG BASED ON EMAIL
-            elif method == "GET" and path == "/getUserConfig":
+            elif method == "POST" and path == "/getUserConfig":
                 config_exists, config = self.get_user_config(event)
                 if config_exists:
                     response_body = {
@@ -61,7 +69,7 @@ class ApiGatewayHandler:
                 }
 
             # CREATES A ONE TIME LINK AND EMAILS IT TO THE USER
-            elif method == "GET" and path == "/createOneTimeLink":
+            elif method == "POST" and path == "/createOneTimeLink":
                 success, result = self.create_one_time_link_and_send(event)
                 message = "Created one time link and sent to user" if success else result
                 response_body = {
@@ -71,7 +79,7 @@ class ApiGatewayHandler:
                 }
 
             # VALIDATES THAT A ONE TIME LINK EXISTS AND RETURNS THE USER
-            elif method == "GET" and path == "/validateOneTimeLink":
+            elif method == "POST" and path == "/validateOneTimeLink":
                 success, emailOrErrorMessage = self.validate_one_time_link(event)
 
                 if success:
@@ -99,47 +107,43 @@ class ApiGatewayHandler:
             response_body = {"Error": "Error during API route processing:" + str(e)}
             return self.get_api_response(response_body, 404)
 
-    def get_config_from_dynamo_db(self):
-        ddc = DynamoDBConnection()
-        return ddc.get_config()
-
-    def save_config_to_dynamo_db(self, event):
-        ddc = DynamoDBConnection()
-        data = json.loads(event.get("body", "{}"))
-        result = ddc.update_config_from_json(data)
-        return result
-
     def get_recent_times_from_db(self):
         ddc = DynamoDBConnection()
         return ddc.get_latest_tee_times_all()
 
     def register_new_user(self, event):
         ddc = DynamoDBConnection()
+        otlh = OneTimeLinkHandler()
         body = json.loads(event.get("body", "{}"))
         email = body.get("email")
 
-        result = ddc.add_email_to_all_emails_list(email)
-        result2 = ddc.create_or_update_user_config(email, body)
-        result3 = self.email_sender.send_welcome_email(email)
+        success, message = ddc.add_email_to_all_emails_list(email)
+        if not success: 
+            return message
 
-        return [result3]
+        result = ddc.create_or_update_user_config(email, body)
+        result2 = otlh.handle_one_time_link_creation(email, True)
 
-    def get_user_config(self, event, email=None):
+        return result2
+
+    def get_user_config(self, event, user_email=None):
         ddc = DynamoDBConnection()
-        email = email if email else event.get("queryStringParameters", {}).get("email")
-        config_or_none = ddc.get_user_config(email)
+        post_request_body = json.loads(event.get("body", "{}"))
+        user_email = user_email if user_email else post_request_body["email"]
+        config_or_none = ddc.get_user_config(user_email)
         return (True, config_or_none) if config_or_none else (False, None)
 
     def create_or_update_user_config(self, event):
         ddc = DynamoDBConnection()
-        config_data = json.loads(event.get("body", "{}"))
-        user_email = config_data["email"]
-        result = ddc.create_or_update_user_config(user_email, config_data)
+        post_request_body = json.loads(event.get("body", "{}"))
+        user_email = post_request_body["email"]
+        result = ddc.create_or_update_user_config(user_email, post_request_body)
         return result
 
     def create_one_time_link_and_send(self, event):
         # GET THE USER'S EMAIL FROM EVENT
-        user_email = event.get("queryStringParameters", {}).get("email")
+        post_request_body = json.loads(event.get("body", "{}"))
+        user_email = post_request_body["email"]
         found_user, _ = self.get_user_config(event, user_email)
         if not found_user:
             response_str = f"Tried to get one time link for email that wasn't registered: {user_email}"
@@ -152,8 +156,9 @@ class ApiGatewayHandler:
         return True, result
     
     def validate_one_time_link(self, event):
-        # GET THE CURRENT GUID
-        guid_in_browser = event.get("queryStringParameters", {}).get("guid")
+        # GET THE CURRENT GUID FROM BROWSER
+        post_request_body = json.loads(event.get("body", "{}"))
+        guid_in_browser = post_request_body["guid"]
 
         otlh = OneTimeLinkHandler()
         is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(guid_in_browser)

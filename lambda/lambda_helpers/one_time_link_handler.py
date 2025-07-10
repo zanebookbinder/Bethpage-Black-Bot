@@ -22,13 +22,13 @@ class OneTimeLinkHandler:
 
         return {"id": guid, "email": email, EXPIRE_TIME_KEY: expire_time}
 
-    def handle_one_time_link_creation(self, email):
+    def handle_one_time_link_creation(self, email, welcome_email=False):
         one_time_link_object = self.generate_one_time_link(email)
         print("Created one time link object:", self.one_time_link_to_str(one_time_link_object))
         guid = one_time_link_object['id']
         result = self.one_time_link_table.put_item(Item=one_time_link_object)
-        print("Put item into database table")
-        self.email_sender.send_one_time_link_email(email, guid)
+        print("Put one time link item into database table")
+        self.email_sender.send_one_time_link_email(email, guid, welcome_email)
         print("Sent link to user")
         return result
 

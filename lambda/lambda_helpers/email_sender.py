@@ -3,15 +3,20 @@ from collections import defaultdict
 from lambda_helpers.secret_handler import SecretHandler
 
 WELCOME_EMAIL_TEXT = \
-    "You've registered your email to receive notifications " \
-    "when new tee times are available for Bethpage Black. " \
-    "If you'd like to update your configuration, please visit " \
-    "the website. Thanks for joining!"
+    "Welcome! You've signed up to receive notifications " \
+    "when new tee times are available on Bethpage Black. " \
+    "Please use the one-time link below to update your notification " \
+    "settings. If you did not sign up, please notify us at " \
+    "info@bethpage-black-bot.com."
+WELCOME_EMAIL_SUBJECT = "Hello from the Bethpage Black Bot!"
 
 ONE_TIME_LINK_EMAIL_TEXT = \
-    "You've requested a one time link to update your notification settings " \
+    "You've requested a one-time link to update your notification settings " \
     "for the Bethpage Black Bot. If you did not request this link, please notify " \
     "us at info@bethpage-black-bot.com. Thank you!"
+ONE_TIME_LINK_EMAIL_SUBJECT = "One Time Link to Update Your Bethpage Black Bot Settings"
+
+FRONTEND_URL = 'https://www.bethpage-black-bot.com'
 
 class EmailSender:
 
@@ -67,16 +72,17 @@ class EmailSender:
             },
         )
 
-    def send_one_time_link_email(self, email, guid):
-        link = f"http://localhost:3000/updateSettings/{guid}"
-        message = ONE_TIME_LINK_EMAIL_TEXT + '\n' + link
+    def send_one_time_link_email(self, email, guid, welcome_email=False):
+        email_subject = WELCOME_EMAIL_SUBJECT if welcome_email else ONE_TIME_LINK_EMAIL_SUBJECT
+        link = f"{FRONTEND_URL}/updateSettings/{guid}"
+        message = WELCOME_EMAIL_TEXT if welcome_email else ONE_TIME_LINK_EMAIL_TEXT 
 
         body_html = f"""
         <html>
         <head></head>
         <body>
-        <p>{ONE_TIME_LINK_EMAIL_TEXT}</p>
-        <p>Click the link below to access your one-time login:</p>
+        <p>{message}</p>
+        <p>Use the link below to access your one-time login:</p>
         <p><a href="{link}">{link}</a></p>
         </body>
         </html>
@@ -86,7 +92,7 @@ class EmailSender:
             Source=self.one_time_link_email,
             Destination={"ToAddresses": [email]},
             Message={
-                "Subject": {"Data": "One Time Link to Update Your Bethpage Black Bot Settings"},
+                "Subject": {"Data": email_subject},
                 "Body": {"Html": {"Data": body_html}, "Text": {"Data": message}},
             },
         )
@@ -102,15 +108,16 @@ class EmailSender:
     #     except Exception as e:
     #         return f"Error: {str(e)}"
         
-    def send_welcome_email(self, email):
-        self.ses.send_email(
-            Source=self.admin_email,
-            Destination={"ToAddresses": [email]},
-            Message={
-                "Subject": {"Data": "Hello from the Bethpage Black Bot!"},
-                "Body": {"Text": {"Data": WELCOME_EMAIL_TEXT}},
-            },
-        )
+    # def send_welcome_email(self, email):
+    #     self.send_one_time_link_email()
+    #     self.ses.send_email(
+    #         Source=self.admin_email,
+    #         Destination={"ToAddresses": [email]},
+    #         Message={
+    #             "Subject": {"Data": "Hello from the Bethpage Black Bot!"},
+    #             "Body": {"Text": {"Data": WELCOME_EMAIL_TEXT}},
+    #         },
+    #     )
 
 # es = EmailSender()
 # es.send_one_time_link_email("zane.bookbinder@gmail.com", "4535325fffhello")

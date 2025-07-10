@@ -48,25 +48,6 @@ class DynamoDBConnection:
             }
         )
         return response.get('Item')['all_tee_times']
-
-    def get_config(self):
-        response = self.table.get_item(
-            Key={
-                'id': 'config'
-            }
-        )
-        return response.get('Item')['data']
-
-    def update_config_from_json(self, new_config_json):
-        # Fetch existing config
-        response = self.table.get_item(Key={"id": "config"})
-        item = response.get("Item")
-
-        item['data'] = new_config_json
-
-        # Save updated config back to DynamoDB
-        result = self.table.put_item(Item=item)
-        return result
     
     def get_all_emails_list(self):
         response = self.config_table.get_item(Key = {'id': CONFIG_TABLE_ALL_EMAILS_ID})
@@ -79,11 +60,11 @@ class DynamoDBConnection:
         current_list = self.get_all_emails_list()
         if new_email in current_list:
             print(f"Email is already in list. New email: {new_email}, List: {current_list}")
-            return
+            return False, "Email is already in list"
         
         updated_emails_object = {'id': CONFIG_TABLE_ALL_EMAILS_ID, 'emails': current_list + [new_email]}
         result = self.config_table.put_item(Item=updated_emails_object)
-        return result
+        return True, ""
     
     def get_user_config(self, email):
         response = self.config_table.get_item(Key={"id": email})

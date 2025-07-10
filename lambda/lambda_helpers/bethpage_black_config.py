@@ -3,7 +3,7 @@ from decimal import Decimal
 class BethpageBlackBotConfig:
     def __init__(self, config=None):
         self.earliest_playable_time = "8:00am"
-        self.extra_playable_days = ["6/19/2025", "7/4/2025", "9/1/2025"]
+        self.extra_playable_days = []
         self.include_holidays = True
         self.minimum_minutes_before_sunset = 240
         self.min_players = 2
