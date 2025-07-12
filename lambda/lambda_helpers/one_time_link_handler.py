@@ -26,11 +26,10 @@ class OneTimeLinkHandler:
         one_time_link_object = self.generate_one_time_link(email)
         print("Created one time link object:", self.one_time_link_to_str(one_time_link_object))
         guid = one_time_link_object['id']
-        result = self.one_time_link_table.put_item(Item=one_time_link_object)
+        self.one_time_link_table.put_item(Item=one_time_link_object)
         print("Put one time link item into database table")
         self.email_sender.send_one_time_link_email(email, guid, welcome_email)
         print("Sent link to user")
-        return result
 
     def is_one_time_link_valid(self, one_time_link_item):
         expire_time_str = one_time_link_item.get(EXPIRE_TIME_KEY)

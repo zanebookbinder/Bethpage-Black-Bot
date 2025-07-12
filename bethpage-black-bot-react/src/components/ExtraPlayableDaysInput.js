@@ -32,7 +32,6 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
   };
 
   const removeDate = (index) => {
-    if (dates.length === 1) return;
     const newDates = dates.filter((_, i) => i !== index);
     setFormData(prev => ({ ...prev, extra_playable_days: newDates }));
 
@@ -68,7 +67,6 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
           <Button
             variation="link"
             onClick={() => removeDate(i)}
-            isDisabled={dates.length === 1}
             aria-label={`Remove date ${i + 1}`}
           >
             Remove

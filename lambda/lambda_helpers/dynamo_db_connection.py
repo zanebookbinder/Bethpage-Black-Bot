@@ -63,7 +63,7 @@ class DynamoDBConnection:
             return False, "Email is already in list"
         
         updated_emails_object = {'id': CONFIG_TABLE_ALL_EMAILS_ID, 'emails': current_list + [new_email]}
-        result = self.config_table.put_item(Item=updated_emails_object)
+        self.config_table.put_item(Item=updated_emails_object)
         return True, ""
     
     def get_user_config(self, email):
@@ -78,9 +78,7 @@ class DynamoDBConnection:
         config_object = BethpageBlackBotConfig(new_config) # uses defaults if new_config is none
         db_item = config_object.config_to_dynamodb_item(user_email)
 
-        result = self.config_table.put_item(Item=db_item)
-
-        return result
+        self.config_table.put_item(Item=db_item)
 
 
 # d = DynamoDBConnection()

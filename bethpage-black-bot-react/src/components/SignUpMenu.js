@@ -27,14 +27,16 @@ export default function SignupMenu() {
         },
         body: JSON.stringify({ "email": email }),
       });
+      const data = res.json();
 
-      if (!res.ok) {
-        throw new Error(`API responded with ${res.status}`);
+      if (!res.ok || !data.success) {
+        setStatusMessage('Failed to register user. ' + data.message)
+        setStatusType('error');
+      } else {
+        setStatusMessage('Successfully registered! Please check your email to verify your account and update your settings.');
+        setStatusType('success');
+        setEmail('');
       }
-
-      setStatusMessage('Successfully registered! Please check your email to verify your account and update your settings.');
-      setStatusType('success');
-      setEmail('');
     } catch (error) {
       console.error('Registration error:', error);
       setStatusMessage('Something went wrong. Please try again.');

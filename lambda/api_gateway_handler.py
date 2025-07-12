@@ -41,8 +41,9 @@ class ApiGatewayHandler:
 
             # REGISTERS A NEW USER
             elif method == "POST" and path == "/register":
-                result = self.register_new_user(event)
-                response_body = {"message": "Registered new user", "result": result}
+                success, errorMessage = self.register_new_user(event)
+                message = "Registered new user" if success else errorMessage
+                response_body = {"success": success, "message": message}
 
             # GETS USER CONFIG BASED ON EMAIL
             elif method == "POST" and path == "/getUserConfig":
@@ -62,19 +63,17 @@ class ApiGatewayHandler:
 
             # UPDATES USER CONFIG BASED ON EMAIL
             elif method == "POST" and path == "/updateUserConfig":
-                result = self.create_or_update_user_config(event)
+                self.create_or_update_user_config(event)
                 response_body = {
                     "message": "Created or updated user config",
-                    "result": result,
                 }
 
             # CREATES A ONE TIME LINK AND EMAILS IT TO THE USER
             elif method == "POST" and path == "/createOneTimeLink":
-                success, result = self.create_one_time_link_and_send(event)
-                message = "Created one time link and sent to user" if success else result
+                success, errorMessage = self.create_one_time_link_and_send(event)
+                message = "Created one time link and sent to user" if success else errorMessage
                 response_body = {
                     "message": message,
-                    "result": result,
                     "success": success
                 }
 
@@ -119,12 +118,11 @@ class ApiGatewayHandler:
 
         success, message = ddc.add_email_to_all_emails_list(email)
         if not success: 
-            return message
+            return False, message
 
-        result = ddc.create_or_update_user_config(email, body)
-        result2 = otlh.handle_one_time_link_creation(email, True)
-
-        return result2
+        ddc.create_or_update_user_config(email, body)
+        otlh.handle_one_time_link_creation(email, True)
+        return True, ""
 
     def get_user_config(self, event, user_email=None):
         ddc = DynamoDBConnection()
@@ -137,8 +135,7 @@ class ApiGatewayHandler:
         ddc = DynamoDBConnection()
         post_request_body = json.loads(event.get("body", "{}"))
         user_email = post_request_body["email"]
-        result = ddc.create_or_update_user_config(user_email, post_request_body)
-        return result
+        ddc.create_or_update_user_config(user_email, post_request_body)
 
     def create_one_time_link_and_send(self, event):
         # GET THE USER'S EMAIL FROM EVENT
@@ -152,8 +149,8 @@ class ApiGatewayHandler:
 
         # CREATE, SAVE, AND EMAIL THE LINK
         otlh = OneTimeLinkHandler()
-        result = otlh.handle_one_time_link_creation(user_email)
-        return True, result
+        otlh.handle_one_time_link_creation(user_email)
+        return True, "Successfully created and send a one time link"
     
     def validate_one_time_link(self, event):
         # GET THE CURRENT GUID FROM BROWSER
