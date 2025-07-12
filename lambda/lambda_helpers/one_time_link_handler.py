@@ -12,7 +12,7 @@ class OneTimeLinkHandler:
         self.expire_minutes = expire_minutes
         self.dynamodb = boto3.resource("dynamodb")
         self.one_time_link_table = self.dynamodb.Table(ONE_TIME_LINKS_TABLE_NAME)
-        self.email_sender = EmailSender()
+        self.email_sender = None
 
     def generate_one_time_link(self, email):
         guid = str(uuid.uuid4())
@@ -23,6 +23,9 @@ class OneTimeLinkHandler:
         return {"id": guid, "email": email, EXPIRE_TIME_KEY: expire_time}
 
     def handle_one_time_link_creation(self, email, welcome_email=False):
+        if not self.email_sender:
+            self.email_sender = EmailSender()
+
         one_time_link_object = self.generate_one_time_link(email)
         print("Created one time link object:", self.one_time_link_to_str(one_time_link_object))
         guid = one_time_link_object['id']

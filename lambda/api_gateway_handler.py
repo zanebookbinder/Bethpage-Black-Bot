@@ -29,7 +29,7 @@ class ApiGatewayHandler:
         
         try:
             method, path = event["routeKey"].split()
-            print(f"API call to route {path} with method {method}")
+            print(f"[START] API call to route {path} with method {method}")
 
             response_body = {}
             status_code = 200
@@ -99,6 +99,8 @@ class ApiGatewayHandler:
                 response_body = {"error": "Unsupported route"}
                 status_code = 404
 
+            print(f"[END] API call to route {path} with method {method}")
+            print("Response Body: " + str(response_body))
             return self.get_api_response(response_body, status_code)
         except Exception as e:
             print("ERROR: " + str(e))

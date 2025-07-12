@@ -170,6 +170,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
 
     return (
         <View margin="auto" style={{ display: "inline-block" }}>
+            <Button onClick={() => (window.location.href = '/')} variation="primary" padding=".5rem" marginBottom="1rem">← Go Home</Button>
             <Heading level={3}>Update Notification Settings</Heading>
             <Text marginBottom="2rem">Select the days and times you're able to play!</Text>
 
@@ -330,6 +331,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
                     {statusMessage}
                 </Alert>
             )}
+            <Button onClick={() => (window.location.href = '/')} variation="primary" padding=".5rem" marginTop="1rem">← Go Home</Button>
         </View>
     );
 }
