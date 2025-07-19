@@ -9,6 +9,7 @@ import traceback
 class BethpageBlackBot:
 
     def notify_if_new_tee_times(self):
+        print('Starting tee time notification process')
         self.bethpage_email, self.bethpage_password = (
             SecretHandler.get_bethpage_username_and_password()
         )

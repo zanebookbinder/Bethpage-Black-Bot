@@ -14,8 +14,9 @@ def lambda_handler(event, context):
     bot = BethpageBlackBot()
     bot.notify_if_new_tee_times()
 
+    # remove old one time links
     one_time_link_handler = OneTimeLinkHandler()
     one_time_link_handler.remove_old_one_time_links()
 
     success_message = {"message": "Tee time check completed."}
-    return ApiGatewayHandler().get_api_response(success_message, 200)
+    return ApiGatewayHandler().format_api_response(success_message, 200)

@@ -4,6 +4,8 @@ from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
 from decimal import Decimal
 import json
 import traceback
+import time
+
 
 class ApiGatewayHandler:
     def __init__(self):
@@ -19,16 +21,18 @@ class ApiGatewayHandler:
             print("HEADERS", headers)
             print("ORIGIN", origin)
 
-        allowed_origins = ["http://localhost:3000", "https://www.bethpage-black-bot.com"]
+        allowed_origins = [
+            "http://localhost:3000",
+            "https://www.bethpage-black-bot.com",
+        ]
 
         if origin not in allowed_origins:
-            return {
-                "statusCode": 403,
-                "body": "Forbidden: Invalid origin"
-            }
-        
+            print(f"Invalid origin. Origin={origin}, AllowedOrigins={allowed_origins}")
+            return {"statusCode": 403, "body": "Forbidden: Invalid origin"}
+
         try:
             method, path = event["routeKey"].split()
+            start_time = time.time()
             print(f"[START] API call to route {path} with method {method}")
 
             response_body = {}
@@ -37,7 +41,10 @@ class ApiGatewayHandler:
             # GETS MOST RECENTLY-SCRAPED TEE TIMES
             if method == "GET" and path == "/getRecentTimes":
                 recentTimes = self.get_recent_times_from_db()
-                response_body = {"message": "Recent times retrieved", "result": recentTimes}
+                response_body = {
+                    "message": "Recent times retrieved",
+                    "result": recentTimes,
+                }
 
             # REGISTERS A NEW USER
             elif method == "POST" and path == "/register":
@@ -71,11 +78,12 @@ class ApiGatewayHandler:
             # CREATES A ONE TIME LINK AND EMAILS IT TO THE USER
             elif method == "POST" and path == "/createOneTimeLink":
                 success, errorMessage = self.create_one_time_link_and_send(event)
-                message = "Created one time link and sent to user" if success else errorMessage
-                response_body = {
-                    "message": message,
-                    "success": success
-                }
+                message = (
+                    "Created one time link and sent to user"
+                    if success
+                    else errorMessage
+                )
+                response_body = {"message": message, "success": success}
 
             # VALIDATES THAT A ONE TIME LINK EXISTS AND RETURNS THE USER
             elif method == "POST" and path == "/validateOneTimeLink":
@@ -99,14 +107,16 @@ class ApiGatewayHandler:
                 response_body = {"error": "Unsupported route"}
                 status_code = 404
 
-            print(f"[END] API call to route {path} with method {method}")
+            print(
+                f"[END] API call to route {path} with method {method}, Elapsed={time.time() - start_time}"
+            )
             print("Response Body: " + str(response_body))
-            return self.get_api_response(response_body, status_code)
+            return self.format_api_response(response_body, status_code)
         except Exception as e:
             print("ERROR: " + str(e))
             traceback.print_exc()
             response_body = {"Error": "Error during API route processing:" + str(e)}
-            return self.get_api_response(response_body, 404)
+            return self.format_api_response(response_body, 404)
 
     def get_recent_times_from_db(self):
         ddc = DynamoDBConnection()
@@ -119,7 +129,7 @@ class ApiGatewayHandler:
         email = body.get("email")
 
         success, message = ddc.add_email_to_all_emails_list(email)
-        if not success: 
+        if not success:
             return False, message
 
         ddc.create_or_update_user_config(email, body)
@@ -153,20 +163,24 @@ class ApiGatewayHandler:
         otlh = OneTimeLinkHandler()
         otlh.handle_one_time_link_creation(user_email)
         return True, "Successfully created and send a one time link"
-    
+
     def validate_one_time_link(self, event):
         # GET THE CURRENT GUID FROM BROWSER
         post_request_body = json.loads(event.get("body", "{}"))
         guid_in_browser = post_request_body["guid"]
 
         otlh = OneTimeLinkHandler()
-        is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(guid_in_browser)
 
-        print(f"Validated one time link. Success={is_link_valid}, Email or error message={emailOrErrorMessage}")
-        # result = (True, email) OR (False, error message)
+        is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(
+            guid_in_browser
+        )
+        print(
+            f"Validated one time link. Success={is_link_valid}, Email or error message={emailOrErrorMessage}"
+        )
+
         return is_link_valid, emailOrErrorMessage
 
-    def get_api_response(self, body, status_code):
+    def format_api_response(self, body, status_code):
         if not isinstance(body, str):
             body = json.dumps(body, default=self.decimal_default)
 

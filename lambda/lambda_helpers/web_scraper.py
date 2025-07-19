@@ -6,7 +6,8 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from lambda_helpers.date_handler import DateHandler
 import time
-# import tempfile
+
+BETHPAGE_TEE_TIMES_WEBSITE_URL = 'https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes'
 
 class WebScraper:
 
@@ -60,9 +61,7 @@ class WebScraper:
             )
 
         self.driver.maximize_window()
-        self.driver.get(
-            "https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes"
-        )
+        self.driver.get(BETHPAGE_TEE_TIMES_WEBSITE_URL)
         self.wait = WebDriverWait(self.driver, 10)
         self.wait_short = WebDriverWait(self.driver, 0.5)
 
@@ -83,7 +82,7 @@ class WebScraper:
             days_checked.append(next_day_to_check.text)
 
             self.driver.execute_script("arguments[0].click();", next_day_to_check)
-            day_button = self.wait.until(
+            self.wait.until(
                 EC.element_to_be_clickable((By.CSS_SELECTOR, "td.active.day"))
             )
 

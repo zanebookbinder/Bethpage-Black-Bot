@@ -78,6 +78,8 @@ class OneTimeLinkHandler:
         return all_items
     
     def remove_old_one_time_links(self):
+        print('Removing old one time links from database')
+        
         all_link_items = self.get_all_link_objects()
         for item in all_link_items:
             is_link_active, message = self.is_one_time_link_valid(item)

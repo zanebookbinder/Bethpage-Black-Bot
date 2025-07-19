@@ -32,27 +32,25 @@ class DynamoDBConnection:
         self.table.put_item(Item=latest_item)
         return item["id"]
     
-    def get_latest_filtered_tee_times(self):
+    def get_latest_tee_times_object(self):
         response = self.table.get_item(Key = {'id': LATEST_TEE_TIMES_OBJECT_ID})
         if "Item" not in response:
-            print(f"No object containing all user emails found")
+            print(f"No object with id={LATEST_TEE_TIMES_OBJECT_ID} found")
             return None
-        
-        user_to_filtered_tee_times_dict = response.get('Item')['filtered_tee_times']
-        return user_to_filtered_tee_times_dict
+        return response.get('Item')
+    
+    def get_latest_filtered_tee_times(self):
+        filtered_tee_times = self.get_latest_tee_times_object()[FILTERED_TEE_TIMES_OBJECT_ID]
+        return filtered_tee_times
     
     def get_latest_tee_times_all(self):
-        response = self.table.get_item(
-            Key={
-                'id': 'latest-tee-times'
-            }
-        )
-        return response.get('Item')['all_tee_times']
+        all_tee_times = self.get_latest_tee_times_object()[ALL_TEE_TIMES_OBJECT_ID]
+        return all_tee_times
     
     def get_all_emails_list(self):
         response = self.config_table.get_item(Key = {'id': CONFIG_TABLE_ALL_EMAILS_ID})
         if "Item" not in response:
-            print(f"No object containing all user emails found")
+            print(f"No object with id={CONFIG_TABLE_ALL_EMAILS_ID} found")
             return None
         return response.get('Item')['emails'] # list of emails as strings
     
@@ -69,7 +67,7 @@ class DynamoDBConnection:
     def get_user_config(self, email):
         response = self.config_table.get_item(Key={"id": email})
         if "Item" not in response:
-            print(f"No config found for user {email}")
+            print(f"No config object found for user {email}")
             return None
         item = response.get("Item")
         return item

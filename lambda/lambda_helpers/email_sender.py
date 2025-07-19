@@ -26,6 +26,7 @@ class EmailSender:
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     def send_email(self, email, new_times):
+        print(f'Sending email to {email}')
         # Group times by date
         grouped = defaultdict(list)
         for time in new_times:
@@ -63,6 +64,8 @@ class EmailSender:
         )
 
     def send_error_email(self, error_as_str):
+        print(f'Sending error email to {self.admin_email}')
+
         self.ses.send_email(
             Source=self.admin_email,
             Destination={"ToAddresses": [self.admin_email]},
@@ -73,6 +76,8 @@ class EmailSender:
         )
 
     def send_one_time_link_email(self, email, guid, welcome_email=False):
+        print(f'Sending one time link email to {email}')
+        
         email_subject = WELCOME_EMAIL_SUBJECT if welcome_email else ONE_TIME_LINK_EMAIL_SUBJECT
         link = f"{FRONTEND_URL}/updateSettings/{guid}"
         message = WELCOME_EMAIL_TEXT if welcome_email else ONE_TIME_LINK_EMAIL_TEXT 
