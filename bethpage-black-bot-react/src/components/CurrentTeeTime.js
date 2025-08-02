@@ -17,20 +17,20 @@ export function CurrentTeeTime({ date, time, players }) {
     >
       {/* Left: Players */}
       <View textAlign="center" marginRight="1rem">
-        <Text fontSize="xl" fontWeight="bold" lineHeight="1">
+        <Text fontSize="xl" fontWeight="bold" lineHeight="1" color="#283618">
           {players}
         </Text>
-        <Text fontSize="small" color="gray">
+        <Text fontSize="small" color="#283618">
           Players
         </Text>
       </View>
 
       {/* Right: Date and Time */}
       <View >
-        <Text fontSize="medium" fontWeight="medium">
+        <Text fontSize="medium" fontWeight="medium" color="#283618">
           {shortDate}
         </Text>
-        <Text fontSize="large" color="gray">
+        <Text fontSize="large" color="#283618">
           {dayOfWeek} @ {time}
         </Text>
       </View>

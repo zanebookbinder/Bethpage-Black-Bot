@@ -66,7 +66,7 @@ export default function SignupMenu() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
-          <Button variation="primary" type="submit">
+          <Button variation="primary" type="submit" width={'fit-content'}>
             Sign Up
           </Button>
         </Flex>
@@ -77,8 +77,8 @@ export default function SignupMenu() {
           </Alert>
         )}
 
-        <Flex direction="column" paddingTop="2rem" gap="1rem">
-          <Alert variation="info" hasIcon={true} borderRadius={10}>
+        <Flex direction="column" paddingTop="1rem" gap="1rem">
+          <Alert variation="info" hasIcon={true} borderRadius={10} width={'fit-content'}>
             <Heading level={4}>How It Works</Heading>
           </Alert>
           <Text color="font.secondary">
@@ -89,7 +89,7 @@ export default function SignupMenu() {
             <br />
             <br />
             You can adjust your notification preferences or pause your
-            notifications anytime by getting a secure one-time link sent to
+            notifications at any time by getting a secure one-time link sent to
             your email.
           </Text>
         </Flex>

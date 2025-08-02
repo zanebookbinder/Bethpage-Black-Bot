@@ -45,7 +45,7 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
 		<Heading level={5}>Extra Playable Days</Heading>
     <TextField
         width="fit-content"
-        descriptiveText="What additional days could you play?"
+        descriptiveText="What additional days could you play? (must be between today's date and one year from now)"
         inputStyles={{ display: 'none' }}
         gap={"0.25rem"}
     />

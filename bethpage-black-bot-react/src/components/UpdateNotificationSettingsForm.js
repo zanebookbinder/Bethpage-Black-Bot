@@ -8,7 +8,7 @@ import {
     Flex,
     Alert,
     CheckboxField,
-    Loader
+    Loader,
 } from "@aws-amplify/ui-react";
 import { convertTo12Hour, convertTo24Hour, isValidDateWithinOneYear } from "../utils";
 import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
@@ -162,14 +162,12 @@ export default function UpdateNotificationSettingsForm({ email }) {
 
     if (loading) {
         return (
-            <View padding="2rem">
-                <Loader variation="linear" />
-            </View>
+            <Loader variation="linear" padding="2rem" filledColor={"#bc6c25"} />
         );
     }
 
     return (
-        <View margin="auto" style={{ display: "inline-block" }}>
+        <View className="form">
             <Button onClick={() => (window.location.href = '/')} variation="primary" padding=".5rem" marginBottom="1rem">← Go Home</Button>
             <Heading level={3}>Update Notification Settings</Heading>
             <Text marginBottom="2rem">Select the days and times you're able to play!</Text>

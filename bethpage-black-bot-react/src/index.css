@@ -1,5 +1,6 @@
 body {
-  margin: 0;
+  padding-inline: 3rem !important;
+  margin: 0px !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -7,7 +8,83 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+html {
+  padding: 0px !important;
+  margin: 0px !important;
+  background-color: #606c38;
+}
+
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.amplify-tabs__item--active {
+  border-color: #283618 !important; /* Your desired color */
+}
+
+.homepage > *, .form > * {
+  font-family: 'Montserrat';
+  color: #283618 !important;
+  --amplify-components-heading-color:  #283618 !important;
+  --amplify-colors-font-secondary: #283618 !important;
+  --amplify-colors-font-tertiary: #283618 !important;
+  --amplify-components-field-label-color: #283618 !important;
+  --amplify-components-fieldcontrol-color: #283618 !important;
+  --amplify-components-alert-info-color: #fefae0 !important;
+
+  --amplify-components-button-primary-background-color: #bc6c25 !important;
+  --amplify-components-alert-info-background-color: #bc6c25 !important;
+  --amplify-components-button-primary-hover-background-color: #8d480b !important;
+
+  --amplify-components-fieldcontrol-focus-border-color: #283618;
+
+  --amplify-internal-button-background-color: #bc6c25 !important;
+  --amplify-internal-button-border-color: #bc6c25 !important;
+  --amplify-internal-button-color: #bc6c25 !important;
+  --amplify-components-button-outlined-overlay-focus-background-color: #bc6c25 !important;
+
+  --amplify-checkbox-icon-background-color: #bc6c25 !important;
+  --amplify-internal-button-background-color: #bc6c25 !important;
+  --amplify-internal-button-color: #bc6c25 !important;
+}
+
+.amplify-checkbox__icon {
+  background-color: #bc6c25 !important;
+}
+
+.amplify-button--link {
+  color: #bc6c25 !important;
+}
+
+.amplify-alert {
+  border-radius: 1rem !important;
+}
+
+.amplify-alert--success {
+  background-color: #5fc080 !important;
+  border-radius: 1rem;
+}
+
+.amplify-button--link:hover {
+  background-color: transparent !important;
+}
+
+.amplify-button--primary {
+  width: fit-content;
+}
+
+.amplify-button:hover {
+  background-color: transparent !important;
+  color: #bc6c25 !important;
+  border-color: #bc6c25 !important;;
+}
+
+.form > button {
+  width: fit-content;
+  color: #fefae0 !important;
+}
+
+.amplify-alert__body {
+  --amplify-components-heading-color: #fefae0;
 }

@@ -32,26 +32,20 @@ export default function CurrentTeeTimes() {
   };
 
   return (
-    <View >
+    <View>
       {recentTeeTimes && recentTeeTimes.length > 0 ? (
         <View>
-          {recentTeeTimes.length === 1 ? (
-            <View>
-              <Heading level={3}>There is 1 tee time available! 😄</Heading>
-              <Flex gap={4}>
-                <Text>Get it before it's too late!</Text>
-                <Link href="https://foreupsoftware.com/index.php/booking/19765/2432#/teetimes">Book your tee time here</Link>
-              </Flex>
-            </View>
-          ) : (
-            <View>
-              <Heading level={3}>There are {recentTeeTimes.length} times available! 😄</Heading>
-              <Flex gap={4}>
-                <Text>Get them before it's too late!</Text>
-                <Link href="https://foreupsoftware.com/index.php/booking/19765/2432#/teetimes">Book your tee time here</Link>
-              </Flex>
-            </View>
-          )}
+          <View>
+            {recentTeeTimes.length === 1 ? (
+              <Heading color='#283618' level={3}>There is 1 tee time available! 😄</Heading>
+            ) : (
+              <Heading color='#283618' level={3}>There are {recentTeeTimes.length} times available! 😄</Heading>
+            )}
+            <Flex gap={4}>
+              <Text color="#283618">Get it before it's too late!</Text>
+              <Link color='#283618' href="https://foreupsoftware.com/index.php/booking/19765/2432#/teetimes">Book your tee time here</Link>
+            </Flex>
+          </View>
 
           <View marginTop="1.5rem">
             {recentTeeTimes.map((teeTime, index) => (
@@ -68,7 +62,7 @@ export default function CurrentTeeTimes() {
       ) : (
         <View>
           <Heading level={3}>There are no tee times available 😔</Heading>
-          <Text>Check back later or sign up for alerts!</Text>
+          <Text color='#283618'>Check back later or sign up for alerts!</Text>
         </View>
       )}
     </View>
