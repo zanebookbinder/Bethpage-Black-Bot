@@ -27,7 +27,7 @@ export default function SignupMenu() {
         },
         body: JSON.stringify({ "email": email }),
       });
-      const data = res.json();
+      const data = await res.json();
 
       if (!res.ok || !data.success) {
         setStatusMessage('Failed to register user. ' + data.message)

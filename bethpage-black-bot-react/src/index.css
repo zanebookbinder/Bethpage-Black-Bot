@@ -1,6 +1,14 @@
+
+:root {
+  --olive-background-color: #606c38;
+  --dark-green-text-color: #283618;
+  --orange-button-color: #bc6c25;
+  --white-button-text-color: #fefae0;
+}
 body {
   padding-inline: 3rem !important;
   margin: 0px !important;
+  margin-bottom: 2rem !important;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
@@ -11,7 +19,7 @@ body {
 html {
   padding: 0px !important;
   margin: 0px !important;
-  background-color: #606c38;
+  background-color: var(--olive-background-color);
 }
 
 code {
@@ -20,41 +28,41 @@ code {
 }
 
 .amplify-tabs__item--active {
-  border-color: #283618 !important; /* Your desired color */
+  border-color: var(--dark-green-text-color) !important; /* Your desired color */
 }
 
 .homepage > *, .form > * {
   font-family: 'Montserrat';
-  color: #283618 !important;
-  --amplify-components-heading-color:  #283618 !important;
-  --amplify-colors-font-secondary: #283618 !important;
-  --amplify-colors-font-tertiary: #283618 !important;
-  --amplify-components-field-label-color: #283618 !important;
-  --amplify-components-fieldcontrol-color: #283618 !important;
+  color: var(--dark-green-text-color) !important;
+  --amplify-components-heading-color:  var(--dark-green-text-color) !important;
+  --amplify-colors-font-secondary: var(--dark-green-text-color) !important;
+  --amplify-colors-font-tertiary: var(--dark-green-text-color) !important;
+  --amplify-components-field-label-color: var(--dark-green-text-color) !important;
+  --amplify-components-fieldcontrol-color: var(--dark-green-text-color) !important;
   --amplify-components-alert-info-color: #fefae0 !important;
 
-  --amplify-components-button-primary-background-color: #bc6c25 !important;
-  --amplify-components-alert-info-background-color: #bc6c25 !important;
+  --amplify-components-button-primary-background-color: var(--orange-button-color) !important;
+  --amplify-components-alert-info-background-color: var(--orange-button-color) !important;
   --amplify-components-button-primary-hover-background-color: #8d480b !important;
 
-  --amplify-components-fieldcontrol-focus-border-color: #283618;
+  --amplify-components-fieldcontrol-focus-border-color: var(--dark-green-text-color);
 
-  --amplify-internal-button-background-color: #bc6c25 !important;
-  --amplify-internal-button-border-color: #bc6c25 !important;
-  --amplify-internal-button-color: #bc6c25 !important;
-  --amplify-components-button-outlined-overlay-focus-background-color: #bc6c25 !important;
+  --amplify-internal-button-background-color: var(--orange-button-color) !important;
+  --amplify-internal-button-border-color: var(--orange-button-color) !important;
+  --amplify-internal-button-color: var(--orange-button-color) !important;
+  --amplify-components-button-outlined-overlay-focus-background-color: var(--orange-button-color) !important;
 
-  --amplify-checkbox-icon-background-color: #bc6c25 !important;
-  --amplify-internal-button-background-color: #bc6c25 !important;
-  --amplify-internal-button-color: #bc6c25 !important;
+  --amplify-checkbox-icon-background-color: var(--orange-button-color) !important;
+  --amplify-internal-button-background-color: var(--orange-button-color) !important;
+  --amplify-internal-button-color: var(--orange-button-color) !important;
 }
 
 .amplify-checkbox__icon {
-  background-color: #bc6c25 !important;
+  background-color: var(--orange-button-color) !important;
 }
 
 .amplify-button--link {
-  color: #bc6c25 !important;
+  color: var(--orange-button-color) !important;
 }
 
 .amplify-alert {
@@ -76,8 +84,8 @@ code {
 
 .amplify-button:hover {
   background-color: transparent !important;
-  color: #bc6c25 !important;
-  border-color: #bc6c25 !important;;
+  color: var(--orange-button-color) !important;
+  border-color: var(--orange-button-color) !important;;
 }
 
 .form > button {
@@ -88,3 +96,51 @@ code {
 .amplify-alert__body {
   --amplify-components-heading-color: #fefae0;
 }
+
+.primary-button:hover {
+  background-color: #be996d !important;
+}
+
+/* MOBILE STYLING */
+@media (max-width: 600px) {
+
+  body {
+    padding-inline: 1rem !important;
+  }
+
+  .homepage {
+    max-width: unset;
+    min-height: unset !important;
+    padding: 10px 15px !important;
+  }
+
+  .amplify-tabs span {
+    font-size: .9rem !important;
+  }
+
+  .amplify-tabs__item {
+    padding: .5rem;
+  }
+
+  h3 {
+    font-size: 1.5rem !important;
+  }
+
+  h4 {
+    font-size: 1.15rem !important;
+  }
+
+}
+
+
+/* style={{
+                marginBottom: "2rem",
+                maxWidth: 900,
+                minHeight: "75vh",
+                margin: "auto",
+                padding: 20,
+                backgroundColor: "#fefae0",
+                boxShadow: "0px 4px 12px rgba(0,0,0,0.1)",
+                borderRadius: "1rem",
+                color: "var(--dark-green-text-color)",
+            }} */

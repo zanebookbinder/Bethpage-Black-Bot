@@ -253,6 +253,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
                             required
                             descriptiveText="What's the earliest time you'd want to play?"
                             gap={"0.25rem"}
+                            
                         />
                     </View>
 
