@@ -45,7 +45,7 @@ export default function SignupMenu() {
   };
 
   return (
-    <View margin="auto">
+    <View>
       <Flex direction="column" gap="2rem">
         <View>
           <Heading level={3}>Sign up for tee time alerts!</Heading>

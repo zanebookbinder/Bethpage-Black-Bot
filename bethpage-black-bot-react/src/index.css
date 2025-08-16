@@ -31,7 +31,7 @@ code {
   border-color: var(--dark-green-text-color) !important; /* Your desired color */
 }
 
-.homepage > *, .form > * {
+.homepage > *, .form > *, .about-this-site > * {
   font-family: 'Montserrat';
   color: var(--dark-green-text-color) !important;
   --amplify-components-heading-color:  var(--dark-green-text-color) !important;
@@ -55,6 +55,25 @@ code {
   --amplify-checkbox-icon-background-color: var(--orange-button-color) !important;
   --amplify-internal-button-background-color: var(--orange-button-color) !important;
   --amplify-internal-button-color: var(--orange-button-color) !important;
+}
+
+.header-buttons {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.tab-wrapper {
+  width: 650px;
+  background-color: #e9e6cc;
+  border-radius: 1rem;
+  margin: 1rem;
+  padding: 2rem;
+  margin-inline: auto;
+}
+
+a {
+  color: var(--dark-green-text-color);
 }
 
 .amplify-checkbox__icon {
@@ -101,8 +120,13 @@ code {
   background-color: #be996d !important;
 }
 
+.amplify-tabs__list {
+  width: fit-content;
+  margin-inline: auto;
+}
+
 /* MOBILE STYLING */
-@media (max-width: 600px) {
+@media (max-width: 800px) {
 
   body {
     padding-inline: 1rem !important;
@@ -112,6 +136,24 @@ code {
     max-width: unset;
     min-height: unset !important;
     padding: 10px 15px !important;
+  }
+
+  .tab-wrapper {
+    width: unset;
+  }
+
+  .header-buttons {
+    flex-direction: column;
+    justify-content: flex-start;
+    padding-block: 1rem;
+  }
+
+  .header-buttons h2, .header-buttons h3 {
+    margin-block: 0rem !important;
+  }
+
+  .about-page-link-text {
+    font-size: 1rem !important;
   }
 
   .amplify-tabs span {

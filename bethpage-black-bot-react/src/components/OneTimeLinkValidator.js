@@ -7,8 +7,8 @@ import {
     Heading,
     Flex,
 } from "@aws-amplify/ui-react";
-import UpdateConfiguration from "./UpdateNotificationSettingsForm";
 import { API_BASE_URL } from "../utils";
+import UpdateNotificationSettingsForm from "./UpdateNotificationSettingsForm";
 
 export default function OneTimeLinkValidator() {
     const { guid } = useParams();
@@ -72,5 +72,5 @@ export default function OneTimeLinkValidator() {
         );
     }
 
-    return <UpdateConfiguration email={email} />;
+    return <UpdateNotificationSettingsForm email={email} />;
 }
