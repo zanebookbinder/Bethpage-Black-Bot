@@ -4,23 +4,28 @@ import { View, Heading, Text, Link, Flex, Button } from "@aws-amplify/ui-react";
 import { API_BASE_URL } from "../utils";
 
 export default function CurrentTeeTimes() {
-    const [recentTeeTimes, setRecentTeeTimes] = useState([
-        // {
-        //   "Date": "Thursday June 5th",
-        //   "Holes": "18",
-        //   "Players": "4",
-        //   "Time": "4:50pm"
-        // },
-        // {
-        //   "Date": "Thursday June 5th",
-        //   "Holes": "18",
-        //   "Players": "4",
-        //   "Time": "5:20pm"
-        // }
-    ]);
+    const useDummyData = false;
+    const [recentTeeTimes, setRecentTeeTimes] = useState([]);
 
     useEffect(() => {
-        fetchCurrentTeeTimes();
+        if (useDummyData) {
+            setRecentTeeTimes(
+                {
+                    Date: "Thursday June 5th",
+                    Holes: "18",
+                    Players: "4",
+                    Time: "4:50pm",
+                },
+                {
+                    Date: "Thursday June 5th",
+                    Holes: "18",
+                    Players: "4",
+                    Time: "5:20pm",
+                }
+            );
+        } else {
+            fetchCurrentTeeTimes();
+        }
 
         // eslint-disable-next-line
     }, []);
@@ -36,17 +41,25 @@ export default function CurrentTeeTimes() {
             {recentTeeTimes && recentTeeTimes.length > 0 ? (
                 <View>
                     <View>
-                        <Heading
-                            color="var(--dark-green-text-color)"
-                            level={3}
-                        >
-                            There {recentTeeTimes.length === 1 ? "is 1 tee time" : "are " + recentTeeTimes.length + " tee times"} available! 😄
+                        <Heading color="var(--dark-green-text-color)" level={3}>
+                            There{" "}
+                            {recentTeeTimes.length === 1
+                                ? "is 1 tee time"
+                                : "are " +
+                                  recentTeeTimes.length +
+                                  " tee times"}{" "}
+                            available! 😄
                         </Heading>
                         <Flex gap={4} direction={"column"}>
                             <Text color="var(--dark-green-text-color)">
-                                Get {recentTeeTimes.length === 1 ? "it" : "them"} before it's too late!
+                                Get{" "}
+                                {recentTeeTimes.length === 1 ? "it" : "them"}{" "}
+                                before it's too late!
                             </Text>
-                            <Button variation="primary" className="primary-button">
+                            <Button
+                                variation="primary"
+                                className="primary-button"
+                            >
                                 <Link
                                     color="var(--white-button-text-color)"
                                     href="https://foreupsoftware.com/index.php/booking/19765/2432#/teetimes"

@@ -14,16 +14,21 @@ export default function AboutThisSite() {
                 }}
             >
                 <Heading level={3}>About this site</Heading>
-                <Link height={"fit-content"}>Github repo</Link>
+                <Link height={"fit-content"} to='https://github.com/zanebookbinder/Bethpage-Black-Bot'>Source Github repo</Link>
             </div>
             <Text>
-                Hi, I'm Zane (WAVE EMOJI HERE) and I created Bethpage Black Bot!
-                Check out my LinkedIn, Github, and personal website if you want
-                to conect.
+                Hi, I'm Zane 👋  and I created Bethpage Black Bot!
+                Check out my {' '}
+                <Link to='https://www.linkedin.com/in/zane-bookbinder/'>LinkedIn</Link>,
+                {' '}
+                <Link to='https://github.com/zanebookbinder'>Github</Link>,
+                {' and '}
+                <Link to='https://www.zanebookbinder.com/'>personal website</Link> {' '}
+                if you want to connect.
                 <br />
                 <br />
                 Since you're on this site, odds are you're an NYC or Long-Island
-                based golfer struggling to score a tee time on the Black course.
+                based golfer struggling to snag a tee time on the Black course.
                 A few months ago, I was too.
                 <br />
                 <br />I got my 7-day resident access and refreshed the tee sheet
@@ -50,7 +55,7 @@ export default function AboutThisSite() {
                 spots were available at 12:30pm on the following Saturday! I
                 snatched it up thanks to the bot and was able to play the course
                 with a friend just before the Ryder Cup, which made it extra
-                cool (I played terribly, but what can you do SHRUG EMOJI).
+                cool (I played terribly, but what can you do 🤷‍♂️).
                 People rarely drop their times once secured, but when they do,
                 I'm now there to grab them.
                 <br />
@@ -58,7 +63,8 @@ export default function AboutThisSite() {
                 This frontend site is a quick addition that gives a face to the
                 otherwise-backend project. It lets users sign up, adjust their
                 filter preferences (ex. which days of the week they are free to
-                play golf), and view the bot's most recent tee time finds.
+                play golf), and view the bot's most recent tee time finds. I 
+                hope it helps you get to play the Black Course like it did for me!
                 <br />
                 <br />
                 If you have any questions, comments, or suggestions, you can

@@ -89,7 +89,8 @@ a {
 }
 
 .amplify-alert--success {
-  background-color: #5fc080 !important;
+  background-color: var(--olive-background-color) !important;
+  color: var(--white-button-text-color) !important;
   border-radius: 1rem;
 }
 
@@ -140,6 +141,7 @@ a {
 
   .tab-wrapper {
     width: unset;
+    padding: 1rem;
   }
 
   .header-buttons {
