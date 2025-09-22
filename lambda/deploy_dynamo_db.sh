@@ -7,6 +7,7 @@ set -e
 AWS_REGION=$(aws configure get region)
 CONFIG_TABLE_NAME="bethpage-black-bot-config"
 LINKS_TABLE_NAME="bethpage-black-bot-one-time-links"
+LATE_NIGHT_WAITLISTS_TABLE_NAME="bethpage-black-bot-late-night-show-waitlists"
 
 create_table_if_not_exists() {
   local TABLE_NAME=$1
@@ -30,3 +31,4 @@ create_table_if_not_exists() {
 # ---------- Run ----------
 create_table_if_not_exists "$CONFIG_TABLE_NAME"
 create_table_if_not_exists "$LINKS_TABLE_NAME"
+create_table_if_not_exists "$LATE_NIGHT_WAITLISTS_TABLE_NAME"
