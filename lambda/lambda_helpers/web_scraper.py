@@ -6,12 +6,19 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from lambda_helpers.date_handler import DateHandler
 import time
+import os
 
 BETHPAGE_TEE_TIMES_WEBSITE_URL = 'https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes'
 
 class WebScraper:
 
     def __init__(self, username, password):
+        # Ensure Selenium cache directory is writable in AWS Lambda
+        os.environ['SELENIUM_CACHE_DIR'] = '/tmp/selenium'
+        os.environ["HOME"] = "/tmp"
+        os.environ["XDG_CACHE_HOME"] = "/tmp"
+        os.environ["SELENIUM_CACHE_PATH"] = "/tmp/selenium"
+        os.environ["TMPDIR"] = "/tmp"
         self.username = username
         self.password = password
 

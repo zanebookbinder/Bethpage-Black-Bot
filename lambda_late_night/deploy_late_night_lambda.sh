@@ -1,18 +1,18 @@
 #!/bin/bash
 
-# Exit immediately on error
 set -e
 
-# Configurable variables
-LAMBDA_NAME="bethpage-black-bot"
-IMAGE_NAME="docker-images"
-IMAGE_TAG="v5.0.0"
-LAMBDA_TIMEOUT_SECONDS=90
+LAMBDA_NAME="late-night-show-bot"
+IMAGE_NAME="late-night-docker-image"
+IMAGE_TAG="v1.0.0"
+LAMBDA_TIMEOUT_SECONDS=300
 MEMORY_SIZE_MB=512
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 AWS_REGION="us-east-1"
 ECR_URI="$AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com/$IMAGE_NAME:$IMAGE_TAG"
 IAM_ROLE_ARN="arn:aws:iam::$AWS_ACCOUNT_ID:role/service-role/bethpaige-black-bot-role-np1ssf1j"
+
+cd $(dirname $0)
 
 echo "🔧 Building Docker image..."
 docker build --platform linux/amd64 --provenance=false -t $IMAGE_NAME .
@@ -24,14 +24,19 @@ echo "🔐 Logging in to ECR..."
 aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $AWS_ACCOUNT_ID.dkr.ecr.$AWS_REGION.amazonaws.com
 
 echo "📦 Pushing image to ECR..."
+# Ensure ECR repository exists
+if ! aws ecr describe-repositories --repository-names "$IMAGE_NAME" --region $AWS_REGION >/dev/null 2>&1; then
+  echo "🆕 ECR repository '$IMAGE_NAME' does not exist. Creating it..."
+  aws ecr create-repository --repository-name "$IMAGE_NAME" --region $AWS_REGION
+  echo "✅ ECR repository '$IMAGE_NAME' created."
+fi
+
 docker push $ECR_URI
 
 echo "✅ Docker image successfully pushed to ECR: $ECR_URI"
 
-echo "🚀 Updating Lambda function 'bethpage-black-bot' with new image..."
+echo "🚀 Updating Lambda function '$LAMBDA_NAME' with new image..."
 
-# -------- Create or Update Lambda --------
-echo "🔍 Checking if Lambda '$LAMBDA_NAME' exists..."
 if aws lambda get-function --function-name "$LAMBDA_NAME" --region $AWS_REGION >/dev/null 2>&1; then
     CURRENT_TIMEOUT=$(aws lambda get-function-configuration \
       --function-name "$LAMBDA_NAME" \
@@ -70,22 +75,21 @@ else
     echo "✅ Lambda function created successfully."
 fi
 
-# Add EventBridge rule to trigger Lambda every 10 minutes from 8am to 10:50pm EST (UTC-4), excluding December, January, and February
-RULE_NAME="bethpage-black-bot-schedule"
-# Months: 3-11 (March to November)
-SCHEDULE_EXPRESSION="cron(0/10 12-23,0,1,2 * 3-11 ? *)"
+# Add EventBridge rule to trigger Lambda at 9am and 6pm EST daily
+RULE_NAME="late-night-show-bot-schedule"
+SCHEDULE_EXPRESSION="cron(0 14,23 * * ? *)" # 9am and 6pm EST (14:00, 23:00 UTC)
 
 if ! aws events describe-rule --name "$RULE_NAME" --region $AWS_REGION >/dev/null 2>&1; then
-  echo "🕒 Creating EventBridge rule for scheduled Lambda triggers every 10 minutes from 8am to 10:50pm EST, excluding Dec, Jan, Feb..."
+  echo "🕒 Creating EventBridge rule for scheduled Lambda triggers at 9am and 6pm EST..."
 else
   echo "🔄 EventBridge rule already exists, updating..."
 fi
 
 aws events put-rule \
-  --name "$RULE_NAME" \
-  --schedule-expression "$SCHEDULE_EXPRESSION" \
-  --region $AWS_REGION \
-  --no-cli-pager
+--name "$RULE_NAME" \
+--schedule-expression "$SCHEDULE_EXPRESSION" \
+--region $AWS_REGION \
+--no-cli-pager
 
 # Add Lambda as target to the rule
 aws events put-targets \
