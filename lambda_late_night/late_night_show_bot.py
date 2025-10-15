@@ -10,14 +10,14 @@ import traceback
 
 class LateNightShowBot:
 
-    def notify_if_new_waitlist_opportunities(self):
+    def notify_if_new_waitlist_opportunities(self, verbose=False):
         print("Starting late night show waitlist notification process")
 
         late_night_email_sender = LateNightEmailSender()
         try:
             # Find available waitlists
             new_waitlist_entries = (
-                self.add_current_waitlists_to_db_and_return_new_items()
+                self.add_current_waitlists_to_db_and_return_new_items(verbose)
             )
 
             if not new_waitlist_entries:
@@ -37,7 +37,7 @@ class LateNightShowBot:
             late_night_email_sender.send_error_email(error_message)
             raise e
 
-    def add_current_waitlists_to_db_and_return_new_items(self, verbose=False):
+    def add_current_waitlists_to_db_and_return_new_items(self, verbose):
         web_scraper = LateNightWebScraper()
         late_night_dynamo_db_connection = LateNightShowDynamoDBConnection()
 
@@ -61,6 +61,7 @@ class LateNightShowBot:
                         "Current waitlist items in db:\n"
                         + ", ".join(existing_waitlist_items_as_str)
                     )
+                    print(f"Newly found waitlist items:\n" + ", ".join([str(s) for s in entries]))
                 for entry in entries:
                     if str(entry) not in existing_waitlist_items_as_str:
                         if show_name not in new_entries_to_alert:
@@ -81,4 +82,4 @@ class LateNightShowBot:
 
 
 # l = LateNightShowBot()
-# l.notify_if_new_waitlist_opportunities()
+# l.notify_if_new_waitlist_opportunities(True)

@@ -24,7 +24,7 @@ class WaitlistEntry:
         return {'Date': self.date, 'Time': self.show_time, 'ButtonText': self.button_text}
 
     def from_dynamo_db_item(show_name, db_json):
-        return WaitlistEntry(db_json['Date'], show_name, db_json['Time'], db_json['ButtonText'])
+        return WaitlistEntry(db_json['Date'], show_name, db_json['ButtonText'], db_json['Time'])
 
 
 BASE_URL = "https://1iota.com/"
