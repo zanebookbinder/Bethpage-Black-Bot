@@ -20,13 +20,15 @@ class LateNightShowBot:
                 self.add_current_waitlists_to_db_and_return_new_items(verbose)
             )
 
-            if not new_waitlist_entries:
-                print("No new waitlist opportunities found. Exiting...")
+            filtered_waitlist_entries = self.filter_entries_for_time(new_waitlist_entries)
+
+            if not filtered_waitlist_entries:
+                print("No new waitlist opportunities found after filtering. Exiting...")
                 return
 
-            print(f"Found new entries for {len(new_waitlist_entries)} shows!")
+            print(f"Found new entries for {len(filtered_waitlist_entries)} shows!")
 
-            late_night_email_sender.send_waitlist_email(new_waitlist_entries)
+            late_night_email_sender.send_waitlist_email(filtered_waitlist_entries)
             print("Sent email notification!")
 
         except Exception as e:
@@ -79,6 +81,12 @@ class LateNightShowBot:
             raise e
         finally:
             web_scraper.close()
+
+    def filter_entries_for_time(self, entries):
+        # This is a hack to avoid converting the time string to a datetime... oops
+        # Sorry not sorry
+        return [e for e in entries \
+                if int(e.show_time.strip()[0]) > 3]
 
 
 # l = LateNightShowBot()
