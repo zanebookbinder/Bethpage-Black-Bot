@@ -82,12 +82,14 @@ class LateNightShowBot:
         finally:
             web_scraper.close()
 
-    def filter_entries_for_time(self, entries):
+    def filter_entries_for_time(self, entries_dict):
         # This is a hack to avoid converting the time string to a datetime... oops
         # Sorry not sorry
-        return [e for e in entries \
-                if int(e.show_time.strip()[0]) > 3]
-
+        for show_name, entries in entries_dict.items():
+            entries_dict[show_name] = [e for e in entries
+                                  if int(e.show_time.strip()[0]) > 3]
+            
+        return entries_dict
 
 # l = LateNightShowBot()
 # l.notify_if_new_waitlist_opportunities(True)

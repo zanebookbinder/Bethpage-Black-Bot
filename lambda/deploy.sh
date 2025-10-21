@@ -73,7 +73,7 @@ fi
 # Add EventBridge rule to trigger Lambda every 10 minutes from 8am to 10:50pm EST (UTC-4), excluding December, January, and February
 RULE_NAME="bethpage-black-bot-schedule"
 # Months: 3-11 (March to November)
-SCHEDULE_EXPRESSION="cron(0/10 12-23,0,1,2 * 3-11 ? *)"
+SCHEDULE_EXPRESSION="cron(0/5 12-23,0,1,2 * 3-11 ? *)"
 
 if ! aws events describe-rule --name "$RULE_NAME" --region $AWS_REGION >/dev/null 2>&1; then
   echo "🕒 Creating EventBridge rule for scheduled Lambda triggers every 10 minutes from 8am to 10:50pm EST, excluding Dec, Jan, Feb..."
