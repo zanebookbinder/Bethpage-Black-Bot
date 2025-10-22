@@ -86,9 +86,13 @@ class LateNightShowBot:
         # This is a hack to avoid converting the time string to a datetime... oops
         # Sorry not sorry
         for show_name, entries in entries_dict.items():
-            entries_dict[show_name] = [e for e in entries
+            filtered_entries = [e for e in entries
                                   if int(e.show_time.strip()[0]) > 3]
-            
+            if not filtered_entries:
+                entries_dict.pop(show_name)
+            else:
+                entries_dict[show_name] = filtered_entries
+
         return entries_dict
 
 # l = LateNightShowBot()
