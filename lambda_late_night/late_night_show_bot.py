@@ -85,15 +85,14 @@ class LateNightShowBot:
     def filter_entries_for_time(self, entries_dict):
         # This is a hack to avoid converting the time string to a datetime... oops
         # Sorry not sorry
+        new_filtered_entries_dict = {}
         for show_name, entries in entries_dict.items():
             filtered_entries = [e for e in entries
                                   if int(e.show_time.strip()[0]) > 3]
-            if not filtered_entries:
-                entries_dict.pop(show_name)
-            else:
-                entries_dict[show_name] = filtered_entries
+            if filtered_entries:
+                new_filtered_entries_dict[show_name] = filtered_entries
 
-        return entries_dict
+        return new_filtered_entries_dict
 
 # l = LateNightShowBot()
 # l.notify_if_new_waitlist_opportunities(True)
