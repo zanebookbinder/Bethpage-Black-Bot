@@ -14,7 +14,12 @@ class TeeTimeFilterer():
 
             # LOCATION AND HOILDAY CONFIG
             self.bethpage_info = LocationInfo("Farmingdale", "USA", "America/New_York", 40.7326, -73.4457)
-            self.holiday_dates = [date.strftime("%m/%d/%Y") for date in holidays.UnitedStates(years=datetime.now().year)]
+            us_holidays = holidays.UnitedStates(years=datetime.now().year)
+            self.holiday_dates = [
+                date.strftime("%m/%d/%Y")
+                for date, name in us_holidays.items()
+                if "Veterans Day" not in name
+            ]
             self.date_handler = DateHandler()
         except Exception as e:
             print("ERROR WITH TEE_TIME_FILTERER SETUP", e)
@@ -126,7 +131,10 @@ class TeeTimeFilterer():
         print("New times (to notify about):", new_times)
         return new_times
 
-# t = TeeTimeFilterer()
-# d = [{'Date': 'Saturday May 31st', 'Time': '3:50pm', 'Players': 2, 'Holes': 18}]
+# t = TeeTimeFilterer()# d = [{'Date': 'Tuesday November 11th', 'Time': '12:40pm', 'Players': 2, 'Holes': 18}]
 
 # t.filter_tee_times(d)
+
+# t = TeeTimeFilterer()
+
+# t.filter_tee_times_for_user(d, 'zane.bookbinder@gmail.com')
