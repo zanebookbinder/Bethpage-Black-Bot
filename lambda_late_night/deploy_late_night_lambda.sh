@@ -75,12 +75,12 @@ else
     echo "✅ Lambda function created successfully."
 fi
 
-# Add EventBridge rule to trigger Lambda at 9am and 6pm EST daily
+# Add EventBridge rule to trigger Lambda at 7pm EST daily
 RULE_NAME="late-night-show-bot-schedule"
-SCHEDULE_EXPRESSION="cron(0 14,23 * * ? *)" # 9am and 6pm EST (14:00, 23:00 UTC)
+SCHEDULE_EXPRESSION="cron(0 0 * * ? *)" # 7pm EST is 0am UTC
 
 if ! aws events describe-rule --name "$RULE_NAME" --region $AWS_REGION >/dev/null 2>&1; then
-  echo "🕒 Creating EventBridge rule for scheduled Lambda triggers at 9am and 6pm EST..."
+  echo "🕒 Creating EventBridge rule for scheduled Lambda triggers at 7pm EST..."
 else
   echo "🔄 EventBridge rule already exists, updating..."
 fi
