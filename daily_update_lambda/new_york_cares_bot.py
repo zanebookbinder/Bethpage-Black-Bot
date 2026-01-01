@@ -71,7 +71,7 @@ class NewYorkCaresBot:
 
         html_lines = [
             "<div>",
-            "<h2>New Volunteering Opportunities (New York Cares)</h2>",
+            "<h2>Volunteering Opportunities (New York Cares)</h2>",
             "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>",
             "<thead><tr><th>Date</th><th>Title</th><th>Time</th><th>Location</th><th>Transit Time</th><th>Walking Time</th><th>Link</th></tr></thead>",
             "<tbody>",
@@ -91,11 +91,11 @@ class NewYorkCaresBot:
                 transit_time = safe(opp.get("transit_time"), "")
                 walking_time = safe(opp.get("walking_time"), "")
                 link = opp.get("link") or ""
-                link_html = f'<a href="{link}">{link}</a>' if link else ""
+                link_html = f'<a href="{link}">Click here</a>' if link else ""
                 row = "<tr>"
                 if i == 0:
                     row += f"<td rowspan='{len(entries)}'>{date_label}</td>"
-                row += f"<td>{title}</td><td>{time}</td><td>{location}</td><td>{transit_time}</td><td>{walking_time}</td><td>{link_html}</td></tr>"
+                row += f"<td>{title}</td><td style=\"white-space: nowrap;\">{time}</td><td>{location}</td><td>{transit_time}</td><td>{walking_time}</td><td>{link_html}</td></tr>"
                 html_lines.append(row)
 
         html_lines += ["</tbody></table></div>"]

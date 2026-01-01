@@ -15,7 +15,7 @@ def lambda_handler(event, context):
     # 3) combine and send
     email_service = DailyUpdateEmailService()
     email_service.send_combined_email(
-        late_night_html, nyc_html, subject="Zane's Daily Update"
+        [late_night_html, nyc_html], subject="Zane's Daily Update"
     )
 
     return {"message": "Zane's Daily Update sent."}

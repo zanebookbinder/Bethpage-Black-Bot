@@ -8,18 +8,20 @@ class DailyUpdateEmailService:
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     def send_combined_email(
-        self, late_html: str, nyc_html: str, subject: str = "Zane's Daily Update"
+        self, html_pieces, subject: str = "Zane's Daily Update"
     ):
         print(f"Sending Daily Update email to {self.admin_email}")
 
-        parts = ["<h1>Zane's Daily Update</h1>"]
-        if late_html:
-            parts.append(late_html)
-        if nyc_html:
-            parts.append("<hr>")
-            parts.append(nyc_html)
+        parts = []
+        if html_pieces:
+            parts.append(html_pieces[0])
+            for piece in html_pieces[1:]:
+                parts.append("<hr>")
+                parts.append(piece)
 
-        body_html = "<html><body>" + "".join(parts) + "</body></html>"
+        body_html = "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">" \
+            + "".join(parts) \
+            + "</body></html>"
 
         self.ses.send_email(
             Source=self.admin_email,

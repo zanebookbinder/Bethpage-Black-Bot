@@ -81,7 +81,7 @@ class LateNightShowBot:
         """Return the HTML body for late night waitlists and optional volunteer opportunities."""
         html_lines = [
             "<div>",
-            "<h2>New Late Night Show Waitlists Found</h2>",
+            "<h2>Late Night Show Waitlists</h2>",
             "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>",
             "<thead><tr><th>Show Name</th><th>Date</th><th>Time</th><th>Button Text Found</th></thead>",
             "<tbody>",
