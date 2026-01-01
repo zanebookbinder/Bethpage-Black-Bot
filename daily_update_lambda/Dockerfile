@@ -13,7 +13,8 @@ RUN rm ./chrome-installer.sh
 # Install dependencies
 RUN pip install selenium
 RUN pip install boto3
+RUN pip install requests
 # Copy the main application code
 COPY . ./
 # Command to run the Lambda function
-CMD [ "main_late_night.lambda_handler" ]
+CMD [ "daily_update_lambda.lambda_handler" ]

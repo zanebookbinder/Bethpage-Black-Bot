@@ -2,8 +2,8 @@
 
 set -e
 
-LAMBDA_NAME="late-night-show-bot"
-IMAGE_NAME="late-night-docker-image"
+LAMBDA_NAME="daily-update-bot"
+IMAGE_NAME="daily-update-docker-image"
 IMAGE_TAG="v1.0.0"
 LAMBDA_TIMEOUT_SECONDS=300
 MEMORY_SIZE_MB=512
@@ -76,7 +76,7 @@ else
 fi
 
 # Add EventBridge rule to trigger Lambda at 7pm EST daily
-RULE_NAME="late-night-show-bot-schedule"
+RULE_NAME="daily-update-bot-schedule"
 SCHEDULE_EXPRESSION="cron(0 0 * * ? *)" # 7pm EST is 0am UTC
 
 if ! aws events describe-rule --name "$RULE_NAME" --region $AWS_REGION >/dev/null 2>&1; then
