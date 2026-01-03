@@ -5,12 +5,13 @@ from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretH
 class DailyUpdateEmailService:
     def __init__(self):
         self.admin_email = DailyUpdateSecretHandler.get_admin_email()
+        self.daily_update_emails = DailyUpdateSecretHandler.get_daily_updates_emails()
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     def send_combined_email(
         self, html_pieces, subject: str = "Zane's Daily Update"
     ):
-        print(f"Sending Daily Update email to {self.admin_email}")
+        print(f"Sending Daily Update email to {self.daily_update_emails}")
 
         parts = []
         if html_pieces:
@@ -25,7 +26,7 @@ class DailyUpdateEmailService:
 
         self.ses.send_email(
             Source=self.admin_email,
-            Destination={"ToAddresses": [self.admin_email]},
+            Destination={"ToAddresses": self.daily_update_emails},
             Message={
                 "Subject": {"Data": subject},
                 "Body": {"Html": {"Data": body_html}},
