@@ -275,7 +275,7 @@ class LateNightWebScraper:
             except Exception:
                 show_time = None  # fallback if no time is found
 
-            if "join waitlist" in button_text.lower():
+            if 'join waitlist' in button_text.lower() or 'request tickets' in button_text.lower():
                 waitlist_entry = WaitlistEntry(date_text, URL_TO_SHOW_NAME_DICT[show_url], button_text, show_time)
                 return waitlist_entry
         except Exception as e:
