@@ -1,0 +1,45 @@
+{
+    "table-name": "daily-updates-data",
+    "objects": [
+        {
+            "id": "New York Cares",
+            "Volunteering Opportunities": [
+                {
+                    "date": "2025-06-15",
+                    "time": "10:00 AM - 1:00 PM",
+                    "location": "123 Main St, New York, NY",
+                    "title": "Warehouse Sorting",
+                    "description": "Help sort donations at the warehouse.",
+                    "link": "https://www.newyorkcares.org/volunteer-opportunity-1",
+                    "transit-time": "45 mins",
+                    "walking-time": "1 hour 26 mins"
+                },
+                {
+                    "date": "2025-06-20",
+                    "time": "2:00 PM - 5:00 PM",
+                    "location": "456 Elm St, New York, NY",
+                    "title": "Community Garden Maintenance",
+                    "description": "Assist with community garden maintenance.",
+                    "link": "https://www.newyorkcares.org/volunteer-opportunity-1",
+                    "transit-time": "30 mins",
+                    "walking-time": "60 mins"
+                }
+            ]
+        },
+        {
+            "id": "The Late Show with Stephen Colbert",
+            "Waitlists": [
+                {
+                    "Date": "MON JAN 5",
+                    "Time": "2:00 PM ET",
+                    "ButtonText": "JOIN WAITLIST"
+                },
+                {
+                    "Date": "MON JAN 12",
+                    "Time": "3:00 PM ET",
+                    "ButtonText": "JOIN WAITLIST"
+                }
+            ]
+        }
+    ]
+}
