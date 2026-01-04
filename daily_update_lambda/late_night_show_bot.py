@@ -70,7 +70,11 @@ class LateNightShowBot:
         current_entries = self.add_current_waitlists_to_db_and_return_current_items(
             verbose
         )
-        filtered = self.filter_entries_for_time(current_entries)
+
+        # Commenting this out to send all entries for now
+        #filtered = self.filter_entries_for_time(current_entries)
+
+        filtered = current_entries
 
         if not filtered:
             return None
@@ -111,6 +115,7 @@ class LateNightShowBot:
 
     def filter_entries_for_time(self, entries_dict):
         # This is a hack to avoid converting the time string to a datetime... oops
+        # Filters the list to any times after 4:00pm
         # Sorry not sorry
         new_filtered_entries_dict = {}
         for show_name, entries in entries_dict.items():
