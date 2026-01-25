@@ -30,7 +30,7 @@ class NewYorkCaresBot:
 
         current = scraper.find_weekend_opportunities()
         if not current:
-            return None
+            return ""
 
         # update DB with current (overwrite)
         db.update_volunteering_for_org("New York Cares", current)

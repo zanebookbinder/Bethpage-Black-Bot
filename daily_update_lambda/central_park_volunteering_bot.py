@@ -8,6 +8,7 @@ class CentralParkVolunteeringBot:
         self.session = requests.Session()
 
     def scrape_data_and_return_email_html(self):
+        print('Starting Central Park volunteering community day notification process')
         try:
             response = self.session.get(self.url)
             response.raise_for_status()
@@ -55,6 +56,7 @@ class CentralParkVolunteeringBot:
         if not events:
             return "<h3>Central Park Community Days</h3><p>No available volunteering opportunities at this time.</p>"
 
+        print(f'Found {len(events)} events')
         table_rows = ""
         for event in events:
             table_rows += f"""
