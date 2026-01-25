@@ -11,10 +11,7 @@ class DailyUpdateEmailService:
     def send_combined_email(self, html_pieces, subject: str = "Zane's Daily Update"):
         print(f"Sending Daily Update email to {self.daily_update_emails}")
 
-        if None in html_pieces:
-            index = html_pieces.index(None)
-            print("One of the HTML pieces is None, replacing with empty string. Index:", index)
-            html_pieces = [piece if piece is not None else "" for piece in html_pieces]
+        html_pieces = [piece for piece in html_pieces if piece is not None]
 
         body_html = (
             "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">"

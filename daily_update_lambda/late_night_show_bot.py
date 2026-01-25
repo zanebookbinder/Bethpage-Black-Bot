@@ -10,6 +10,7 @@ from daily_update_helpers.daily_updates_email_service import (
     DailyUpdateEmailService,
 )
 
+
 class LateNightShowBot:
 
     def notify_if_new_waitlist_opportunities(self, verbose=False):
@@ -72,7 +73,7 @@ class LateNightShowBot:
         )
 
         # Commenting this out to send all entries for now
-        #filtered = self.filter_entries_for_time(current_entries)
+        # filtered = self.filter_entries_for_time(current_entries)
 
         filtered = current_entries
 
@@ -86,8 +87,8 @@ class LateNightShowBot:
         html_lines = [
             "<div>",
             "<h2>Late Night Show Waitlists</h2>",
-            "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>",
-            "<thead><tr><th>Show Name</th><th>Date</th><th>Time</th><th>Button Text Found</th></thead>",
+            "<table style='width: auto; border-collapse: collapse;'>",
+            "<thead><tr style='background-color: #f0f0f0;'><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Show Name</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Date</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Time</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Button Text Found</th></tr></thead>",
             "<tbody>",
         ]
 
@@ -99,12 +100,10 @@ class LateNightShowBot:
             ][0]
 
             for i, entry in enumerate(entries):
-                row = "<tr>"
+                row = "<tr style='border: 1px solid #ddd;'>"
                 if i == 0:
-                    row += (
-                        f"<td rowspan='{len(entries)}'>{show_name}<br/>{show_url}</td>"
-                    )
-                row += f"<td>{entry.date}</td><td>{entry.show_time}</td><td>{entry.button_text}</td>"
+                    row += f"<td style='border: 1px solid #ddd; padding: 8px;' rowspan='{len(entries)}'>{show_name}<br/>{show_url}</td>"
+                row += f"<td style='border: 1px solid #ddd; padding: 8px;'>{entry.date}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.show_time}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.button_text}</td>"
                 row += "</tr>"
                 html_lines.append(row)
 

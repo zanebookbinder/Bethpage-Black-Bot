@@ -41,9 +41,8 @@ class CentralParkVolunteeringBot:
                     )
                     if not sold_out_span:
                         time = link.get_text(strip=True).split("\n")[0]
-                        href = link.get("href", "#")
                         available_events.append(
-                            {"date": date, "time": time, "link": href}
+                            {"date": date, "time": time,}
                         )
 
             return self._generate_email_html(available_events)
@@ -54,7 +53,7 @@ class CentralParkVolunteeringBot:
 
     def _generate_email_html(self, events):
         if not events:
-            return "<h3>Central Park Community Days</h3><p>No available volunteering opportunities at this time.</p>"
+            return "<h2>Central Park Community Days</h2><p>No available volunteering opportunities at this time.</p>"
 
         print(f'Found {len(events)} events')
         table_rows = ""
@@ -63,12 +62,12 @@ class CentralParkVolunteeringBot:
             <tr>
                 <td>{event['date']}</td>
                 <td>{event['time']}</td>
-                <td><a href="{event['link']}" target="_blank">Register</a></td>
+                <td><a href="{self.url}" target="_blank">Register</a></td>
             </tr>
             """
 
         return f"""
-        <h3>Central Park Community Days</h3>
+        <h2>Central Park Community Days</h2>
         <table style="width:100%; border-collapse: collapse;">
             <thead>
                 <tr style="background-color: #f0f0f0;">
