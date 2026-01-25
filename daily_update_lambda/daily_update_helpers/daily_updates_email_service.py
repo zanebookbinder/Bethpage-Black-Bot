@@ -8,21 +8,14 @@ class DailyUpdateEmailService:
         self.daily_update_emails = DailyUpdateSecretHandler.get_daily_updates_emails()
         self.ses = boto3.client("ses", region_name="us-east-1")
 
-    def send_combined_email(
-        self, html_pieces, subject: str = "Zane's Daily Update"
-    ):
+    def send_combined_email(self, html_pieces, subject: str = "Zane's Daily Update"):
         print(f"Sending Daily Update email to {self.daily_update_emails}")
 
-        parts = []
-        if html_pieces:
-            parts.append(html_pieces[0])
-            for piece in html_pieces[1:]:
-                parts.append("<hr>")
-                parts.append(piece)
-
-        body_html = "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">" \
-            + "".join(parts) \
+        body_html = (
+            "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">"
+            + "<hr>".join(html_pieces)
             + "</body></html>"
+        )
 
         self.ses.send_email(
             Source=self.admin_email,

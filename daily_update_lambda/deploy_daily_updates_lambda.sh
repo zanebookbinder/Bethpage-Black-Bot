@@ -5,7 +5,7 @@ set -e
 LAMBDA_NAME="daily-update-bot"
 IMAGE_NAME="daily-update-docker-image"
 IMAGE_TAG="v1.0.0"
-LAMBDA_TIMEOUT_SECONDS=300
+LAMBDA_TIMEOUT_SECONDS=480
 MEMORY_SIZE_MB=512
 AWS_ACCOUNT_ID=$(aws sts get-caller-identity --query "Account" --output text)
 AWS_REGION="us-east-1"
