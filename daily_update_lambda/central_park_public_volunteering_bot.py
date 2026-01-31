@@ -2,13 +2,15 @@ import requests
 from bs4 import BeautifulSoup
 
 
-class CentralParkVolunteeringBot:
+class CentralParkPublicVolunteeringBot:
     def __init__(self):
         self.url = "https://www.centralparknyc.org/volunteer/community-volunteer-days"
         self.session = requests.Session()
 
     def scrape_data_and_return_email_html(self):
-        print('Starting Central Park volunteering community day notification process')
+        print(
+            "Starting Central Park public volunteering community day notification process"
+        )
         try:
             response = self.session.get(self.url)
             response.raise_for_status()
@@ -42,20 +44,23 @@ class CentralParkVolunteeringBot:
                     if not sold_out_span:
                         time = link.get_text(strip=True).split("\n")[0]
                         available_events.append(
-                            {"date": date, "time": time,}
+                            {
+                                "date": date,
+                                "time": time,
+                            }
                         )
 
             return self._generate_email_html(available_events)
 
         except Exception as e:
-            print(f"Error scraping Central Park volunteering: {e}")
+            print(f"Error scraping Central Park public volunteering: {e}")
             return self._generate_error_html()
 
     def _generate_email_html(self, events):
         if not events:
             return "<h2>Central Park Community Days</h2><p>No available volunteering opportunities at this time.</p>"
 
-        print(f'Found {len(events)} events')
+        print(f"Found {len(events)} events")
         table_rows = ""
         for event in events:
             table_rows += f"""
@@ -83,11 +88,13 @@ class CentralParkVolunteeringBot:
         """
 
     def _generate_no_events_html(self):
-        return "<h3>Central Park Volunteering</h3><p>No upcoming events found.</p>"
+        return (
+            "<h3>Central Park Public Volunteering</h3><p>No upcoming events found.</p>"
+        )
 
     def _generate_error_html(self):
-        return "<h3>Central Park Volunteering</h3><p>Unable to retrieve volunteering opportunities at this time.</p>"
+        return "<h3>Central Park Public Volunteering</h3><p>Unable to retrieve volunteering opportunities at this time.</p>"
 
 
-# c = CentralParkVolunteeringBot()
+# c = CentralParkPublicVolunteeringBot()
 # print(c.scrape_data_and_return_email_html())

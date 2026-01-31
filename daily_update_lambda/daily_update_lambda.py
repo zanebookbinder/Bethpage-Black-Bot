@@ -1,6 +1,6 @@
 from late_night_show_bot import LateNightShowBot
 from new_york_cares_bot import NewYorkCaresBot
-from central_park_volunteering_bot import CentralParkVolunteeringBot
+from central_park_public_volunteering_bot import CentralParkPublicVolunteeringBot
 from daily_update_helpers.daily_updates_email_service import DailyUpdateEmailService
 
 
@@ -13,8 +13,8 @@ def lambda_handler(event, context):
     nyc_bot = NewYorkCaresBot()
     nyc_html = nyc_bot.scrape_data_and_return_email_html()
 
-    # 3) get central park volunteering
-    cp_bot = CentralParkVolunteeringBot()
+    # 3) get central park public volunteering
+    cp_bot = CentralParkPublicVolunteeringBot()
     cp_html = cp_bot.scrape_data_and_return_email_html()
 
     # 4) combine and send
@@ -33,6 +33,6 @@ def lambda_handler(event, context):
 # nyc_html = nyc_bot.scrape_data_and_return_email_html()
 # print(nyc_html)
 
-# cp_bot = CentralParkVolunteeringBot()
+# cp_bot = CentralParkPublicVolunteeringBot()
 # cp_html = cp_bot.scrape_data_and_return_email_html()
 # print(cp_html)
