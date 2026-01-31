@@ -143,11 +143,14 @@ class MyImpactPageWebScraper:
             for i, opp_link in enumerate(opportunity_links):
                 try:
                     result = self._visit_opportunity_details(opp_link)
-                    if result:
+                    if result and (
+                        "Saturday" in result[0].get("date", "")
+                        or "Sunday" in result[0].get("date", "")
+                    ):
                         all_opportunities.extend(result)
                         print(
                             f"  [{i + 1}/{len(opportunity_links)}] {opp_link['name']}: "
-                            f"{len(result)} shift(s) with space"
+                            f"{len(result)} weekend shift(s) with space"
                         )
                 except Exception as e:
                     print(f"  Error visiting {opp_link.get('name', 'unknown')}: {e}")

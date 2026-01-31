@@ -34,6 +34,7 @@ class CentralParkPrivateVolunteeringBot:
                 return self._generate_error_html()
 
             opportunities = scraper.get_opportunities_with_space_available()
+
             return self._generate_email_html(opportunities)
 
         except Exception as e:
