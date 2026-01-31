@@ -1,66 +1,22 @@
 import json
 from typing import List
-from .travel_time_calculation_service import TravelTimeCalculationService
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from daily_update_helpers.chrome_helper import create_headless_chrome_driver
+from daily_update_helpers.daily_update_constants import NEW_YORK_CARES_BASE_URL
+from daily_update_helpers.travel_time_calculation_service import (
+    TravelTimeCalculationService,
+)
 
 
 class NewYorkCaresWebScraper:
-    """Simplified scraper for New York Cares project cards.
-
-    Expects cards with class containing `project-card-default` and a child
-    `<div class="hidden">` containing a JSON object (see provided sample).
-
-    Returns a list of dicts with keys: `title`, `date`, `time`, `location`, `link`, `description`.
-    """
-
-    BASE_URL = "https://www.newyorkcares.org/volunteers?boroughs%5B%5D=Manhattan&days%5B%5D=Saturday&days%5B%5D=Sunday"
+    """Scraper for New York Cares project cards. Expects cards with `project-card-default`
+    and a child `<div class="hidden">` containing JSON. Returns dicts with
+    `title`, `date`, `time`, `location`, `link`, `description`."""
 
     def __init__(self, url: str = None):
-        self.url = url or self.BASE_URL
-
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-dev-tools")
-        chrome_options.add_argument("--no-zygote")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--remote-debugging-pipe")
-        chrome_options.add_argument("--log-path=/tmp")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option("useAutomationExtension", False)
-        chrome_options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/143.0.7499.170 Safari/537.36"
-        )
-
-        try:
-            # service = Service(service_log_path="/tmp/chromedriver.log")
-            self.driver = webdriver.Chrome(options=chrome_options)
-        except Exception as e:
-            chrome_options.binary_location = "/opt/chrome/chrome-linux64/chrome"
-
-            service = Service(
-                executable_path="/opt/chrome-driver/chromedriver-linux64/chromedriver",
-                service_log_path="/tmp/chromedriver.log",
-            )
-
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-
-        self.driver.maximize_window()
-        self.wait = WebDriverWait(self.driver, 10)
-        self.wait_short = WebDriverWait(self.driver, 0.5)
-
+        self.url = url or NEW_YORK_CARES_BASE_URL
+        self.driver, self.wait = create_headless_chrome_driver(wait_seconds=10)
         self.travel_time_service = TravelTimeCalculationService()
 
     def find_weekend_opportunities(self) -> List[dict]:

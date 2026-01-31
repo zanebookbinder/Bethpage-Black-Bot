@@ -1,5 +1,5 @@
 import requests
-from .daily_updates_secret_handler import DailyUpdateSecretHandler
+from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretHandler
 
 
 class TravelTimeCalculationService:

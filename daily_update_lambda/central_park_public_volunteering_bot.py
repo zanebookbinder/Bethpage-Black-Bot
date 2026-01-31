@@ -1,10 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
+from daily_update_helpers.daily_update_constants import CENTRAL_PARK_PUBLIC_URL
 
 
 class CentralParkPublicVolunteeringBot:
     def __init__(self):
-        self.url = "https://www.centralparknyc.org/volunteer/community-volunteer-days"
+        self.url = CENTRAL_PARK_PUBLIC_URL
         self.session = requests.Session()
 
     def scrape_data_and_return_email_html(self):
@@ -67,7 +68,7 @@ class CentralParkPublicVolunteeringBot:
             <tr>
                 <td>{event['date']}</td>
                 <td>{event['time']}</td>
-                <td><a href="{self.url}" target="_blank">Register</a></td>
+                <td><a href="{self.url}" target="_blank">Sign Up</a></td>
             </tr>
             """
 

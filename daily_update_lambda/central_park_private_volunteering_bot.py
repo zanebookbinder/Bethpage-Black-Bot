@@ -5,12 +5,10 @@ for volunteer opportunities with space available (login required).
 
 import html
 from collections import defaultdict
-
-from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
+from datetime import datetime
 from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretHandler
-
-
-OPPORTUNITIES_URL = "https://app.betterimpact.com/Volunteer/Schedule/Opportunities"
+from daily_update_helpers.daily_update_constants import MYIMPACTPAGE_OPPORTUNITIES_URL
+from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
 
 
 class CentralParkPrivateVolunteeringBot:
@@ -54,13 +52,22 @@ class CentralParkPrivateVolunteeringBot:
 
         print(f"Found {len(opportunities)} shift(s) with space available")
 
-        # Group by date (date on left, grouped)
+        # Group by date (date on left, grouped), sort soonest to farthest
         by_date = defaultdict(list)
         for opp in opportunities:
             by_date[opp.get("date", "")].append(opp)
 
+        def _parse_sort_key(date_str: str):
+            """Parse date for sorting. Returns (datetime, original) - unparseable go last."""
+            for fmt in ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d", "%B %d, %Y"):
+                try:
+                    return (datetime.strptime(date_str.strip(), fmt), date_str)
+                except ValueError:
+                    continue
+            return (datetime.max, date_str)
+
         table_rows = ""
-        for date in sorted(by_date.keys()):
+        for date in sorted(by_date.keys(), key=_parse_sort_key):
             shifts = by_date[date]
             date_escaped = html.escape(date)
             for i, opp in enumerate(shifts):
@@ -68,7 +75,7 @@ class CentralParkPrivateVolunteeringBot:
                 start_time = html.escape(opp.get("start_time", ""))
                 end_time = html.escape(opp.get("end_time", ""))
                 open_slots = html.escape(opp.get("open_slots", ""))
-                url = html.escape(opp.get("url", OPPORTUNITIES_URL))
+                url = html.escape(opp.get("url", MYIMPACTPAGE_OPPORTUNITIES_URL))
                 row = "<tr>"
                 if i == 0:
                     row += f'<td style="border: 1px solid #ddd; padding: 8px;" rowspan="{len(shifts)}">{date_escaped}</td>'
@@ -84,7 +91,6 @@ class CentralParkPrivateVolunteeringBot:
 
         return f"""
         <h2>Central Park Private Volunteering (MyImpactPage)</h2>
-        <p>Opportunities with space available:</p>
         <table style="width:100%; border-collapse: collapse;">
             <thead>
                 <tr style="background-color: #f0f0f0;">
@@ -100,7 +106,7 @@ class CentralParkPrivateVolunteeringBot:
                 {table_rows}
             </tbody>
         </table>
-        <p><a href="{OPPORTUNITIES_URL}" target="_blank">View all opportunities on MyImpactPage</a></p>
+        <p><a href="{MYIMPACTPAGE_OPPORTUNITIES_URL}" target="_blank">View all opportunities on MyImpactPage</a></p>
         """
 
     def _generate_error_html(self) -> str:

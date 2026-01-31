@@ -1,12 +1,16 @@
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
+import time
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import StaleElementReferenceException
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.common.exceptions import NoSuchElementException
-import time
+from selenium.common.exceptions import (
+    NoSuchElementException,
+    StaleElementReferenceException,
+)
+from daily_update_helpers.chrome_helper import create_headless_chrome_driver
+from daily_update_helpers.daily_update_constants import (
+    IOTIA_BASE_URL,
+    IOTIA_URL_TO_SHOW_NAME,
+)
 
 
 class WaitlistEntry:
@@ -20,65 +24,27 @@ class WaitlistEntry:
         return f"[{self.show_name}: {self.date} at {self.show_time}]"
 
     def to_dynamo_db_item(self):
-        return {'Date': self.date, 'Time': self.show_time, 'ButtonText': self.button_text}
+        return {
+            "Date": self.date,
+            "Time": self.show_time,
+            "ButtonText": self.button_text,
+        }
 
     def from_dynamo_db_item(show_name, db_json):
-        return WaitlistEntry(db_json['Date'], show_name, db_json['ButtonText'], db_json['Time'])
+        return WaitlistEntry(
+            db_json["Date"], show_name, db_json["ButtonText"], db_json["Time"]
+        )
 
 
-BASE_URL = "https://1iota.com/"
-COLBERT_URL = "https://1iota.com/show/536/the-late-show-with-stephen-colbert"
-SETH_MEYERS_URL = "https://1iota.com/show/461/late-night-with-seth-meyers"
-DAILY_SHOW_URL = "https://1iota.com/show/1248/the-daily-show"
-FALLON_URL = "https://1iota.com/show/353/the-tonight-show-starring-jimmy-fallon"
-URL_TO_SHOW_NAME_DICT = {
-    COLBERT_URL: "The Late Show with Stephen Colbert",
-    SETH_MEYERS_URL: "Late Night with Seth Meyers",
-    DAILY_SHOW_URL: "The Daily Show",
-    FALLON_URL: "The Tonight Show Starring Jimmy Fallon"
-}
+# Re-export for consumers
+URL_TO_SHOW_NAME_DICT = IOTIA_URL_TO_SHOW_NAME
+
 
 class LateNightWebScraper:
 
     def __init__(self):
-        self.base_url = BASE_URL
-
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-dev-tools")
-        chrome_options.add_argument("--no-zygote")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--remote-debugging-pipe")
-        chrome_options.add_argument("--log-path=/tmp")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option("useAutomationExtension", False)
-        chrome_options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/114.0.0.0 Safari/537.36"
-        )
-
-        try:
-            service = Service(service_log_path="/tmp/chromedriver.log")
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-        except Exception as e:
-            chrome_options.binary_location = "/opt/chrome/chrome-linux64/chrome"
-
-            service = Service(
-                executable_path="/opt/chrome-driver/chromedriver-linux64/chromedriver",
-                service_log_path="/tmp/chromedriver.log",
-            )
-
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-
-        self.driver.maximize_window()
-        self.wait = WebDriverWait(self.driver, 10)
+        self.base_url = IOTIA_BASE_URL
+        self.driver, self.wait = create_headless_chrome_driver(wait_seconds=10)
         self.wait_short = WebDriverWait(self.driver, 0.5)
 
     def find_all_available_waitlists(self):
@@ -89,11 +55,11 @@ class LateNightWebScraper:
         waitlist_entries = {}  # (show_url: list of waitlist entries)
 
         print(
-            f"Checking {len(URL_TO_SHOW_NAME_DICT.keys())} late night shows for waitlist opportunities"
+            f"Checking {len(IOTIA_URL_TO_SHOW_NAME)} late night shows for waitlist opportunities"
         )
 
         # Visit each show page directly and check for waitlist opportunities
-        for show_url, show_name in URL_TO_SHOW_NAME_DICT.items():
+        for show_url, show_name in IOTIA_URL_TO_SHOW_NAME.items():
             try:
                 print(f"Checking show: {show_name}")
                 waitlist_entries[show_name] = self.find_available_waitlists_for_show(
@@ -269,14 +235,19 @@ class LateNightWebScraper:
             try:
                 time_element = self.driver.find_element(
                     By.XPATH,
-                    "//div[contains(@class, 'eventDetailSection')]//div[contains(@class, 'fa-clock')]/parent::div"
+                    "//div[contains(@class, 'eventDetailSection')]//div[contains(@class, 'fa-clock')]/parent::div",
                 )
                 show_time = time_element.text.strip()
             except Exception:
                 show_time = None  # fallback if no time is found
 
-            if 'join waitlist' in button_text.lower() or 'request tickets' in button_text.lower():
-                waitlist_entry = WaitlistEntry(date_text, URL_TO_SHOW_NAME_DICT[show_url], button_text, show_time)
+            if (
+                "join waitlist" in button_text.lower()
+                or "request tickets" in button_text.lower()
+            ):
+                waitlist_entry = WaitlistEntry(
+                    date_text, IOTIA_URL_TO_SHOW_NAME[show_url], button_text, show_time
+                )
                 return waitlist_entry
         except Exception as e:
             print(f"No waitlist button found for date {date_text}: {e}")

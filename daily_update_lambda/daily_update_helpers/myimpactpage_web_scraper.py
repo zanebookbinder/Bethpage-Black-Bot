@@ -1,66 +1,31 @@
-"""
-Web scraper for MyImpactPage / Better Impact volunteer opportunities.
-Handles login and scraping of opportunities with space available.
-"""
+"""Web scraper for MyImpactPage / Better Impact volunteer opportunities."""
 
 import re
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import NoSuchElementException
 import time
+from selenium.webdriver.common.by import By
+from selenium.common.exceptions import NoSuchElementException
 
-
-BASE_URL = "https://app.betterimpact.com"
-LOGIN_URL = f"{BASE_URL}/Login/Login"
-OPPORTUNITIES_URL = f"{BASE_URL}/Volunteer/Schedule/Opportunities"
+from daily_update_helpers.chrome_helper import create_headless_chrome_driver
+from daily_update_helpers.daily_update_constants import (
+    MYIMPACTPAGE_BASE_URL,
+    MYIMPACTPAGE_LOGIN_URL,
+    MYIMPACTPAGE_OPPORTUNITIES_URL,
+    MYIMPACTPAGE_BAD_OPPORTUNITY_NAMES,
+    MYIMPACTPAGE_NAVBAR_MARKERS,
+    MAX_MYIMPACTPAGE_SHIFTS,
+)
 
 
 class MyImpactPageWebScraper:
     """Scrapes MyImpactPage for volunteer opportunities with space available."""
 
     def __init__(self):
-        chrome_options = Options()
-        chrome_options.add_argument("--headless=new")
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-dev-tools")
-        chrome_options.add_argument("--no-zygote")
-        chrome_options.add_argument("--single-process")
-        chrome_options.add_argument("--remote-debugging-pipe")
-        chrome_options.add_argument("--log-path=/tmp")
-        chrome_options.add_argument("--window-size=1920,1080")
-        chrome_options.add_argument("--blink-settings=imagesEnabled=false")
-        chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-        chrome_options.add_experimental_option("excludeSwitches", ["enable-automation"])
-        chrome_options.add_experimental_option("useAutomationExtension", False)
-        chrome_options.add_argument(
-            "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-            "AppleWebKit/537.36 (KHTML, like Gecko) "
-            "Chrome/114.0.0.0 Safari/537.36"
-        )
-
-        try:
-            service = Service(service_log_path="/tmp/chromedriver.log")
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-        except Exception:
-            chrome_options.binary_location = "/opt/chrome/chrome-linux64/chrome"
-            service = Service(
-                executable_path="/opt/chrome-driver/chromedriver-linux64/chromedriver",
-                service_log_path="/tmp/chromedriver.log",
-            )
-            self.driver = webdriver.Chrome(service=service, options=chrome_options)
-
-        self.driver.maximize_window()
-        self.wait = WebDriverWait(self.driver, 15)
+        self.driver, self.wait = create_headless_chrome_driver(wait_seconds=15)
 
     def login(self, username: str, password: str) -> bool:
         """Log in to MyImpactPage. Returns True if successful."""
         try:
-            self.driver.get(LOGIN_URL)
+            self.driver.get(MYIMPACTPAGE_LOGIN_URL)
             time.sleep(2)  # Allow page to load
 
             # Try multiple selector strategies for username/password fields
@@ -160,18 +125,16 @@ class MyImpactPageWebScraper:
         """
         all_opportunities = []
         try:
-            self.driver.get(OPPORTUNITIES_URL)
+            self.driver.get(MYIMPACTPAGE_OPPORTUNITIES_URL)
             time.sleep(3)  # Allow dynamic content to load
 
             # Step 1: Parse OpportunityHolder table to get list of links
             opportunity_links = self._parse_opportunities_list()
 
-            # Filter out opportunities that contain "Volunteer Development"
-            bad_opportunity_names = ["Volunteer Development", "Volunteer Training"]
             opportunity_links = [
                 opp
                 for opp in opportunity_links
-                if all(name not in opp["name"] for name in bad_opportunity_names)
+                if all(n not in opp["name"] for n in MYIMPACTPAGE_BAD_OPPORTUNITY_NAMES)
             ]
 
             print(f"Found {len(opportunity_links)} opportunities to check")
@@ -192,7 +155,7 @@ class MyImpactPageWebScraper:
 
         except Exception as e:
             print(f"Error fetching opportunities: {e}")
-        return all_opportunities[:100]  # Limit total shifts
+        return all_opportunities[:MAX_MYIMPACTPAGE_SHIFTS]
 
     def _parse_opportunities_list(self) -> list[dict]:
         """
@@ -212,9 +175,8 @@ class MyImpactPageWebScraper:
                     name = link_elem.text.strip()
                     if not href or not name:
                         continue
-                    # Ensure absolute URL
                     if href.startswith("/"):
-                        href = BASE_URL + href
+                        href = MYIMPACTPAGE_BASE_URL + href
                     links.append({"name": name, "url": href})
                 except NoSuchElementException:
                     continue
@@ -232,7 +194,7 @@ class MyImpactPageWebScraper:
                         name = link_elem.text.strip()
                         if href and name and "OpportunityDetails" in href:
                             if href.startswith("/"):
-                                href = BASE_URL + href
+                                href = MYIMPACTPAGE_BASE_URL + href
                             links.append({"name": name, "url": href})
                     except NoSuchElementException:
                         continue
@@ -258,14 +220,13 @@ class MyImpactPageWebScraper:
         Parse the opportunity details page for shifts with space available.
         Table columns: Date, Start Time, End Time, Openings (e.g. "8 / 10"), Sign Up.
         Open Slots = first number from "X / Y" (spots remaining).
-        Excludes navbar rows ("Back to Activity List Log Out Help") and Full rows.
+        Excludes navbar rows and Full rows.
         """
-        NAVBAR_MARKERS = ("Back to Activity List", "Log Out", "Help")
 
         def _extract_open_slots(text: str) -> str:
             """Extract spots remaining from 'X / Y' format. E.g. '8 / 10' -> '8'."""
-            open_slots, _ = text.split("/")
-            return open_slots.strip()
+            m = re.search(r"(\d+)\s*/\s*\d+", text or "")
+            return m.group(1) if m else (text or "").strip()
 
         shifts = []
         try:
@@ -275,8 +236,7 @@ class MyImpactPageWebScraper:
                     text = row.text
                     if not text.strip():
                         continue
-                    # Skip navbar rows
-                    if any(marker in text for marker in NAVBAR_MARKERS):
+                    if any(m in text for m in MYIMPACTPAGE_NAVBAR_MARKERS):
                         continue
                     # Skip rows that are clearly full
                     if "Full" in text or "0 space" in text.lower():
@@ -303,7 +263,7 @@ class MyImpactPageWebScraper:
                             else opportunity_url
                         )
                         if shift_url and shift_url.startswith("/"):
-                            shift_url = BASE_URL + shift_url
+                            shift_url = MYIMPACTPAGE_BASE_URL + shift_url
                         if not shift_url:
                             shift_url = opportunity_url
 
@@ -337,7 +297,7 @@ class MyImpactPageWebScraper:
                 rows = self.driver.find_elements(By.CSS_SELECTOR, "table tbody tr")
                 for row in rows:
                     text = row.text
-                    if any(marker in text for marker in NAVBAR_MARKERS):
+                    if any(m in text for m in MYIMPACTPAGE_NAVBAR_MARKERS):
                         continue
                     if "Full" in text:
                         continue
@@ -348,7 +308,7 @@ class MyImpactPageWebScraper:
                             links[0].get_attribute("href") if links else opportunity_url
                         )
                         if shift_url and shift_url.startswith("/"):
-                            shift_url = BASE_URL + shift_url
+                            shift_url = MYIMPACTPAGE_BASE_URL + shift_url
                         if not shift_url:
                             shift_url = opportunity_url
                         parts = [c.text.strip() for c in cells]
