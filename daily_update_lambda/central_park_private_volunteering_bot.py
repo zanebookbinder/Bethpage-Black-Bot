@@ -59,7 +59,13 @@ class CentralParkPrivateVolunteeringBot:
 
         def _parse_sort_key(date_str: str):
             """Parse date for sorting. Returns (datetime, original) - unparseable go last."""
-            for fmt in ("%m/%d/%Y", "%m/%d/%y", "%Y-%m-%d", "%B %d, %Y"):
+            for fmt in (
+                "%A, %B %d, %Y",
+                "%m/%d/%Y",
+                "%m/%d/%y",
+                "%Y-%m-%d",
+                "%B %d, %Y",
+            ):
                 try:
                     return (datetime.strptime(date_str.strip(), fmt), date_str)
                 except ValueError:
@@ -119,3 +125,22 @@ class CentralParkPrivateVolunteeringBot:
 
 # c = CentralParkPrivateVolunteeringBot()
 # print(c.scrape_data_and_return_email_html())
+
+# c = CentralParkPrivateVolunteeringBot()
+# c._parse_sort_key("Saturday, August 12, 2023")
+
+# def parse_sort_key(date_str: str):
+#     """Parse date for sorting. Returns (datetime, original) - unparseable go last."""
+#     for fmt in (
+#         "%A, %B %d, %Y",
+#         "%m/%d/%Y",
+#         "%m/%d/%y",
+#         "%Y-%m-%d",
+#         "%B %d, %Y",
+#     ):
+#         try:
+#             return (datetime.strptime(date_str.strip(), fmt), date_str)
+#         except ValueError:
+#             continue
+#     return (datetime.max, date_str)
+# print(parse_sort_key("Saturday, August 12, 2023"))
