@@ -1,6 +1,7 @@
 from late_night_show_bot import LateNightShowBot
 from new_york_cares_bot import NewYorkCaresBot
 from central_park_public_volunteering_bot import CentralParkPublicVolunteeringBot
+from central_park_private_volunteering_bot import CentralParkPrivateVolunteeringBot
 from daily_update_helpers.daily_updates_email_service import DailyUpdateEmailService
 
 
@@ -14,13 +15,18 @@ def lambda_handler(event, context):
     nyc_html = nyc_bot.scrape_data_and_return_email_html()
 
     # 3) get central park public volunteering
-    cp_bot = CentralParkPublicVolunteeringBot()
-    cp_html = cp_bot.scrape_data_and_return_email_html()
+    cp_public_bot = CentralParkPublicVolunteeringBot()
+    cp_public_html = cp_public_bot.scrape_data_and_return_email_html()
 
-    # 4) combine and send
+    # 4) get central park private volunteering (MyImpactPage)
+    cp_private_bot = CentralParkPrivateVolunteeringBot()
+    cp_private_html = cp_private_bot.scrape_data_and_return_email_html()
+
+    # 5) combine and send
     email_service = DailyUpdateEmailService()
     email_service.send_combined_email(
-        [late_night_html, nyc_html, cp_html], subject="Zane's Daily Update"
+        [late_night_html, nyc_html, cp_public_html, cp_private_html],
+        subject="Zane's Daily Update",
     )
 
     return {"message": "Zane's Daily Update sent."}
