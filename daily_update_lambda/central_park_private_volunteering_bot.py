@@ -6,6 +6,7 @@ for volunteer opportunities with space available (login required).
 import html
 from collections import defaultdict
 from datetime import datetime
+import holidays
 from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretHandler
 from daily_update_helpers.daily_update_constants import MYIMPACTPAGE_OPPORTUNITIES_URL
 from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
@@ -13,6 +14,14 @@ from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
 
 class CentralParkPrivateVolunteeringBot:
     """Scrapes Central Park private volunteering opportunities from MyImpactPage."""
+
+    def __init__(self):
+        us_holidays = holidays.UnitedStates(years=datetime.now().year)
+        self.holiday_dates = [
+            date.strftime("%m/%d/%Y")
+            for date, name in us_holidays.items()
+            if "Veterans Day" not in name
+        ]
 
     def scrape_data_and_return_email_html(self):
         print(
@@ -51,7 +60,46 @@ class CentralParkPrivateVolunteeringBot:
                 "<p>No opportunities with space available at this time.</p>"
             )
 
-        print(f"Found {len(opportunities)} shift(s) with space available")
+        # Filter to weekends or holidays
+        filtered_opportunities = []
+        for opp in opportunities:
+            date_str = opp.get("date", "")
+            try:
+                # Parse date using the same formats as _parse_sort_key
+                parsed_date = None
+                for fmt in (
+                    "%m/%d/%Y",
+                    "%m/%d/%y",
+                    "%Y-%m-%d",
+                    "%B %d, %Y",
+                    "%A, %B %d, %Y",
+                ):
+                    try:
+                        parsed_date = datetime.strptime(date_str.strip(), fmt)
+                        break
+                    except ValueError:
+                        continue
+                if parsed_date:
+                    # Check if weekend (5=Sat, 6=Sun) or holiday
+                    is_weekend = parsed_date.weekday() >= 5
+                    is_holiday = parsed_date.strftime("%m/%d/%Y") in self.holiday_dates
+                    if is_weekend or is_holiday:
+                        filtered_opportunities.append(opp)
+            except Exception:
+                # If parsing fails, skip
+                continue
+
+        opportunities = filtered_opportunities
+
+        if not opportunities:
+            return (
+                "<h2>Central Park Private Volunteering (MyImpactPage)</h2>"
+                "<p>No weekend or holiday opportunities with space available at this time.</p>"
+            )
+
+        print(
+            f"Found {len(opportunities)} shift(s) with space available (filtered to weekends/holidays)"
+        )
 
         # Group by date (date on left, grouped), sort soonest to farthest
         by_date = defaultdict(list)
@@ -68,7 +116,7 @@ class CentralParkPrivateVolunteeringBot:
                 "%B %d, %Y",
             ):
                 try:
-                    return (datetime.strptime(date_str.strip(), fmt), date_str)
+                    return datetime.strptime(date_str.strip(), fmt)
                 except ValueError:
                     continue
             return (datetime.max, date_str)
@@ -126,9 +174,6 @@ class CentralParkPrivateVolunteeringBot:
 
 # c = CentralParkPrivateVolunteeringBot()
 # print(c.scrape_data_and_return_email_html())
-
-# c = CentralParkPrivateVolunteeringBot()
-# c._parse_sort_key("Saturday, August 12, 2023")
 
 # def parse_sort_key(date_str: str):
 #     """Parse date for sorting. Returns (datetime, original) - unparseable go last."""

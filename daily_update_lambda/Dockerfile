@@ -15,6 +15,7 @@ RUN pip install selenium
 RUN pip install boto3
 RUN pip install requests
 RUN pip install beautifulsoup4
+RUN pip install holidays
 # Copy the main application code
 COPY . ./
 # Command to run the Lambda function
