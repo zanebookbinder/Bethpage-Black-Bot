@@ -25,6 +25,8 @@ class EmailSender:
         self.one_time_link_email = SecretHandler.get_one_time_link_sender_email()
         self.ses = boto3.client("ses", region_name="us-east-1")
 
+    BOOKING_URL = "https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes"
+
     def send_email(self, email, new_times):
         print(f'Sending email to {email}')
         # Group times by date
@@ -32,12 +34,20 @@ class EmailSender:
         for time in new_times:
             grouped[time["Date"]].append(time)
 
+        cell_style = "border: 1px solid #ddd; padding: 8px;"
+        header_style = f"{cell_style} text-align: left;"
+
         # Build the HTML table
         html_lines = [
-            "<html><body>",
+            "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">",
             "<h2>New Bethpage Tee Times Found</h2>",
-            "<table border='1' cellpadding='5' cellspacing='0' style='border-collapse: collapse;'>",
-            "<thead><tr><th>Date</th><th>Time</th><th>Players</th><th>Holes</th></tr></thead>",
+            "<table style='width: auto; border-collapse: collapse;'>",
+            f"<thead><tr style='background-color: #f0f0f0;'>"
+            f"<th style='{header_style}'>Date</th>"
+            f"<th style='{header_style}'>Time</th>"
+            f"<th style='{header_style}'>Players</th>"
+            f"<th style='{header_style}'>Holes</th>"
+            f"</tr></thead>",
             "<tbody>",
         ]
 
@@ -45,12 +55,18 @@ class EmailSender:
             for i, entry in enumerate(entries):
                 row = "<tr>"
                 if i == 0:
-                    row += f"<td rowspan='{len(entries)}'>{date}</td>"
-                row += f"<td>{entry['Time']}</td><td>{entry['Players']}</td><td>{entry['Holes']}</td>"
+                    row += f"<td style='{cell_style}' rowspan='{len(entries)}'>{date}</td>"
+                row += f"<td style='{cell_style}'>{entry['Time']}</td>"
+                row += f"<td style='{cell_style}'>{entry['Players']}</td>"
+                row += f"<td style='{cell_style}'>{entry['Holes']}</td>"
                 row += "</tr>"
                 html_lines.append(row)
 
-        html_lines += ["</tbody></table></body></html>"]
+        html_lines += [
+            "</tbody></table>",
+            f"<p><a href='{self.BOOKING_URL}' target='_blank'>Book on Bethpage</a></p>",
+            "</body></html>",
+        ]
         body_html = "".join(html_lines)
 
         # Send email with HTML body

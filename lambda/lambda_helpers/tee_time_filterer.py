@@ -19,7 +19,7 @@ class TeeTimeFilterer:
             )
             us_holidays = holidays.UnitedStates(years=datetime.now().year)
             self.holiday_dates = [
-                date.strftime("%m/%d/%Y")
+                f"{date.month}/{date.day}/{date.year}"
                 for date, name in us_holidays.items()
                 if "Veterans Day" not in name
             ]
