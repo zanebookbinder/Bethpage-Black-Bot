@@ -86,11 +86,11 @@ aws dynamodb create-table \
   --billing-mode PAY_PER_REQUEST
 ```
 
-4. Set Up EventBridge Trigger (this cron expression will notify every 5 minutes, can easily be changed to certain times of day or days of the week)
+4. Set Up EventBridge Trigger (this cron expression will notify every 3 minutes from March 1 - November 30)
 
 ```
 aws events put-rule \
-  --schedule-expression "cron(0/5 * ? * * *)" \
+  --schedule-expression "cron(0/3 * * 3-11 ? *)" \
   --name bethpage-black-bot-scheduler
 
 $LAMBDA_FUNCTION_ARN=(aws lambda get-function --function-name bethpage-black-bot --query 'Configuration.FunctionArn' --output text)

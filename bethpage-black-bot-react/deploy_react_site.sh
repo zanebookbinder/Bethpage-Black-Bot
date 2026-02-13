@@ -33,12 +33,21 @@ fi
 echo "Zipping build output..."
 zip -r app.zip $BUILD_DIR
 
-echo "Deploying to Amplify..."
-DEPLOY_ID=$(aws amplify start-deployment \
+echo "Creating deployment for Amplify..."
+# Get pre-signed URL for upload
+DEPLOYMENT_RESPONSE=$(aws amplify create-deployment \
   --app-id "$APP_ID" \
   --branch-name "$BRANCH_NAME" \
-  --source app.zip \
-  --query "jobSummary.jobId" \
-  --output text)
+  --output json)
 
-echo "Deployment started! Job ID: $DEPLOY_ID"
+ZIP_UPLOAD_URL=$(echo "$DEPLOYMENT_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['zipUploadUrl'])")
+JOB_ID=$(echo "$DEPLOYMENT_RESPONSE" | python3 -c "import sys, json; print(json.load(sys.stdin)['jobId'])")
+
+echo "Uploading build to Amplify..."
+curl -X PUT -H "Content-Type: application/zip" \
+  -T app.zip \
+  "$ZIP_UPLOAD_URL"
+
+echo ""
+echo "✅ Deployment started! Job ID: $JOB_ID"
+echo "📱 Monitor deployment at: https://console.aws.amazon.com/amplify/home?region=us-east-1#/$APP_ID/$BRANCH_NAME/$JOB_ID"

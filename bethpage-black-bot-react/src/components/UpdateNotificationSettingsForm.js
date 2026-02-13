@@ -10,7 +10,7 @@ import {
     CheckboxField,
     Loader,
 } from "@aws-amplify/ui-react";
-import { convertTo12Hour, convertTo24Hour, isValidDateWithinOneYear } from "../utils";
+import { convertTo12Hour, convertTo24Hour, isValidDate, formatDateToMD, formatMDToDate } from "../utils";
 import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
 import ToggleButtonPair from "./ToggleButtonPair";
 import { API_BASE_URL } from "../utils";
@@ -25,6 +25,8 @@ export default function UpdateNotificationSettingsForm({ email }) {
         minimum_minutes_before_sunset: "",
         min_players: "",
         notifications_enabled: false,
+        start_date: formatMDToDate("3/1"),  // Default: March 1
+        end_date: formatMDToDate("11/30"),  // Default: November 30
     });
     const [notificationsCurrentlyEnabled, setNotificationsCurrentlyEnabled] =
         useState(null);
@@ -64,6 +66,8 @@ export default function UpdateNotificationSettingsForm({ email }) {
                     ),
                     min_players: String(data.min_players || ""),
                     notifications_enabled: data.notifications_enabled,
+                    start_date: formatMDToDate(data.start_date || "3/1"),
+                    end_date: formatMDToDate(data.end_date || "11/30"),
                 });
                 setNotificationsCurrentlyEnabled(data.notifications_enabled);
             } else {
@@ -93,25 +97,16 @@ export default function UpdateNotificationSettingsForm({ email }) {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        const invalidDate = userSettings.extra_playable_days.find(
-            (date) => !isValidDateWithinOneYear(date)
-        );
-
-        if (invalidDate) {
-            setStatusMessage("Found error in date: " + invalidDate + ". Must be in the future and within one year.");
-            setStatusLevel("error");
-            return;
-        }
-
         if (errors) {
             setStatusMessage("Errors found in form. Updates not saved.");
             setStatusLevel("warning");
             return;
         }
 
+        // Filter out past dates automatically instead of showing an error
         const formattedExtraDates = userSettings.extra_playable_days
             .map((d) => d.trim())
-            .filter((d) => d.length > 0);
+            .filter((d) => d.length > 0 && isValidDate(d));
 
         const payload = {
             playable_days_of_week: userSettings.playable_days_of_week,
@@ -126,6 +121,8 @@ export default function UpdateNotificationSettingsForm({ email }) {
             ),
             min_players: parseInt(userSettings.min_players, 10),
             notifications_enabled: userSettings.notifications_enabled,
+            start_date: formatDateToMD(userSettings.start_date),
+            end_date: formatDateToMD(userSettings.end_date),
             email: email,
         };
 
@@ -253,7 +250,35 @@ export default function UpdateNotificationSettingsForm({ email }) {
                             required
                             descriptiveText="What's the earliest time you'd want to play?"
                             gap={"0.25rem"}
-                            
+
+                        />
+                    </View>
+
+                    <View marginTop="1rem">
+                        <Heading level={5}>Season Start Date</Heading>
+                        <TextField
+                            name="start_date"
+                            type="date"
+                            width="fit-content"
+                            value={userSettings.start_date}
+                            onChange={handleChange}
+                            required
+                            descriptiveText="First day of the year you want to receive notifications (e.g., March 1)"
+                            gap={"0.25rem"}
+                        />
+                    </View>
+
+                    <View marginTop="1rem">
+                        <Heading level={5}>Season End Date</Heading>
+                        <TextField
+                            name="end_date"
+                            type="date"
+                            width="fit-content"
+                            value={userSettings.end_date}
+                            onChange={handleChange}
+                            required
+                            descriptiveText="Last day of the year you want to receive notifications (e.g., November 30)"
+                            gap={"0.25rem"}
                         />
                     </View>
 

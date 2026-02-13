@@ -43,6 +43,10 @@ class TeeTimeFilterer:
         for tee_time in tee_times_to_consider:
             day_of_week, date_obj = self.parse_date_string(tee_time["Date"])
 
+            # is within user's configured date range (e.g., March 1 - November 30)
+            is_in_date_range = self.is_within_date_range(user_config, date_obj)
+
+            # is ok day (weekend, holiday, etc.)
             is_playable_day = self.is_playable_day(user_config, day_of_week, date_obj)
 
             tee_time_of_day = datetime.strptime(tee_time["Time"], "%I:%M%p").time()
@@ -55,7 +59,8 @@ class TeeTimeFilterer:
             has_18_holes = tee_time["Holes"] == 18 or tee_time["Holes"] == "18"
 
             if (
-                is_playable_day
+                is_in_date_range
+                and is_playable_day
                 and is_acceptable_time
                 and hits_min_players
                 and has_18_holes
@@ -109,6 +114,30 @@ class TeeTimeFilterer:
         )
 
         return is_playable_day_of_week or is_extra_day_to_notify or is_us_holiday
+
+    def is_within_date_range(self, user_config, date_obj):
+        """Check if date is within user's configured start_date and end_date (annual range)."""
+        try:
+            # Parse start and end dates (format: M/D or MM/DD)
+            start_parts = user_config.start_date.split('/')
+            end_parts = user_config.end_date.split('/')
+            start_month, start_day = int(start_parts[0]), int(start_parts[1])
+            end_month, end_day = int(end_parts[0]), int(end_parts[1])
+
+            # Create comparable tuples (month, day)
+            current_md = (date_obj.month, date_obj.day)
+            start_md = (start_month, start_day)
+            end_md = (end_month, end_day)
+
+            # Handle ranges that don't cross year boundary (e.g., March to November)
+            if start_md <= end_md:
+                return start_md <= current_md <= end_md
+            # Handle ranges that cross year boundary (e.g., November to March)
+            else:
+                return current_md >= start_md or current_md <= end_md
+        except (ValueError, AttributeError, IndexError):
+            # If parsing fails, default to allowing the date
+            return True
 
     def get_user_config_as_object(self, user_email):
         config_data = self.db_table.get_user_config(user_email)

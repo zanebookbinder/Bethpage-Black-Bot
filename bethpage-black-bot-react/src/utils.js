@@ -24,7 +24,7 @@ export function convertTo12Hour(timeStr) {
     return `${hours}:${String(minutes).padStart(2, "0")}${ampm}`;
 }
 
-export function isValidDateWithinOneYear(dateStr) {
+export function isValidDate(dateStr) {
     // Expecting format: YYYY-MM-DD
     const regex = /^(\d{4})-(\d{2})-(\d{2})$/;
     const match = dateStr.match(regex);
@@ -49,9 +49,32 @@ export function isValidDateWithinOneYear(dateStr) {
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Normalize to midnight for comparison
 
-    const oneYearFromNow = new Date();
-    oneYearFromNow.setFullYear(now.getFullYear() + 1);
-    oneYearFromNow.setHours(0, 0, 0, 0);
+    // Only check that it's not in the past
+    return date >= now;
+}
 
-    return date >= now && date <= oneYearFromNow;
+// Kept for backwards compatibility - now just checks if date is valid and not in the past
+export function isValidDateWithinOneYear(dateStr) {
+    return isValidDate(dateStr);
+}
+
+export function formatDateToMD(dateStr) {
+    // Convert YYYY-MM-DD to M/D format
+    const regex = /^(\d{4})-(\d{2})-(\d{2})$/;
+    const match = dateStr.match(regex);
+    if (!match) return dateStr;
+
+    const month = parseInt(match[2], 10);
+    const day = parseInt(match[3], 10);
+    return `${month}/${day}`;
+}
+
+export function formatMDToDate(mdStr, year = new Date().getFullYear()) {
+    // Convert M/D to YYYY-MM-DD for date input
+    const parts = mdStr.split('/');
+    if (parts.length !== 2) return '';
+
+    const month = parseInt(parts[0], 10);
+    const day = parseInt(parts[1], 10);
+    return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
 }
