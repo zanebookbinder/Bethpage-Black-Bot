@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
 from lambda_helpers.date_handler import DateHandler
 import time
 import os
@@ -12,6 +13,9 @@ import os
 logger = logging.getLogger(__name__)
 
 BETHPAGE_TEE_TIMES_WEBSITE_URL = 'https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes'
+
+# Configure which course(s) to search for (add more courses to the list if needed)
+DESIRED_COURSES = ["Black"]  # e.g., ["Black", "Red"] to search multiple courses
 
 class WebScraper:
 
@@ -214,6 +218,80 @@ class WebScraper:
                 logger.error("Login failed after %d attempts: %s", i + 1, str(e))
                 return False
 
+    def select_desired_course(self):
+        """
+        Select the desired course from the facility dropdown.
+        Returns True if a desired course is found and selected, False otherwise.
+        """
+        try:
+            # Wait longer for the page to fully load after clicking resident button
+            logger.debug("Waiting for course dropdown to appear...")
+
+            # Use a longer wait specifically for the dropdown
+            wait_long = WebDriverWait(self.driver, 30)  # 30 second wait
+
+            # Try to find the dropdown with multiple strategies
+            dropdown = None
+            selectors = [
+                (By.ID, "schedule_select", "ID"),
+                (By.NAME, "schedules", "name"),
+                (By.CLASS_NAME, "schedules", "class"),
+            ]
+
+            for by, selector, desc in selectors:
+                try:
+                    logger.debug("Trying to find dropdown by %s: %s", desc, selector)
+                    dropdown = wait_long.until(EC.presence_of_element_located((by, selector)))
+                    logger.info("✓ Found dropdown by %s", desc)
+                    break
+                except Exception as e:
+                    logger.debug("✗ Dropdown not found by %s: %s", desc, str(e))
+                    continue
+
+            if not dropdown:
+                logger.error("Could not find dropdown with any selector")
+                self.driver.save_screenshot("/tmp/no_dropdown_found.png")
+                return False
+
+            # Save screenshot for debugging
+            try:
+                self.driver.save_screenshot("/tmp/before_course_select.png")
+                logger.debug("Screenshot saved to /tmp/before_course_select.png")
+            except:
+                pass
+
+            select = Select(dropdown)
+            all_options = select.options
+
+            # Log available courses for debugging
+            available_courses = [opt.text.strip() for opt in all_options]
+            logger.info("Available courses: %s", ', '.join(available_courses))
+
+            # Look for any of the desired courses
+            for option in all_options:
+                option_text = option.text.strip()
+                for desired_course in DESIRED_COURSES:
+                    if desired_course in option_text:
+                        logger.info("Found desired course: %s", option_text)
+                        select.select_by_visible_text(option_text)
+                        time.sleep(0.5)  # Wait for page to update after selection
+                        return True
+
+            # No desired course found
+            logger.warning("Desired course(s) %s not found in available options: %s",
+                         DESIRED_COURSES, ', '.join(available_courses))
+            return False
+
+        except Exception as e:
+            logger.error("Failed to select course from dropdown: %s", str(e))
+            # Save screenshot on error
+            try:
+                self.driver.save_screenshot("/tmp/course_select_error.png")
+                logger.error("Error screenshot saved to /tmp/course_select_error.png")
+            except:
+                pass
+            return False
+
     def move_to_calendar_page(self):
         for i in range(5):
             try:
@@ -228,6 +306,12 @@ class WebScraper:
                     )
                 )
                 self.driver.execute_script("arguments[0].click();", resident_button)
+
+                # Select the desired course from the dropdown
+                if not self.select_desired_course():
+                    logger.error("Could not select desired course, aborting")
+                    return False
+
                 if self.has_current_date_button():
                     logger.info("Successfully navigated to tee times page")
                     return True

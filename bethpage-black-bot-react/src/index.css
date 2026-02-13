@@ -102,10 +102,74 @@ a {
   width: fit-content;
 }
 
-.amplify-button:hover {
+/* Hover state for non-primary buttons (outline, link, etc.) */
+.amplify-button:not(.amplify-button--primary):hover {
   background-color: transparent !important;
   color: var(--orange-button-color) !important;
-  border-color: var(--orange-button-color) !important;;
+  border-color: var(--orange-button-color) !important;
+}
+
+/* Keep primary buttons orange on hover, focus, and active states */
+.amplify-button--primary:hover,
+.amplify-button--primary:focus,
+.amplify-button--primary:active,
+.amplify-button--primary:focus-visible {
+  background-color: var(--orange-button-color) !important;
+  border-color: var(--orange-button-color) !important;
+  color: var(--white-button-text-color) !important;
+  outline: none !important;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+/* Remove dark outline when holding down button */
+.amplify-button--primary:active {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Style date and time inputs to match the theme - use more specific selectors */
+input[type="date"],
+input[type="time"],
+.amplify-input[type="date"],
+.amplify-input[type="time"],
+.amplify-field input[type="date"],
+.amplify-field input[type="time"] {
+  font-family: 'Montserrat', sans-serif !important;
+  color: var(--dark-green-text-color) !important;
+  background-color: #fefae0 !important;
+  border: 2px solid var(--dark-green-text-color) !important;
+  border-radius: 6px !important;
+  padding: 10px 12px !important;
+  font-size: 1rem !important;
+  font-weight: 500 !important;
+}
+
+/* Style the calendar/clock picker icons */
+input[type="date"]::-webkit-calendar-picker-indicator,
+input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(23%) sepia(18%) saturate(1654%) hue-rotate(60deg) brightness(91%) contrast(94%) !important;
+  cursor: pointer !important;
+}
+
+input[type="date"]:focus,
+input[type="time"]:focus,
+.amplify-input[type="date"]:focus,
+.amplify-input[type="time"]:focus,
+.amplify-field input[type="date"]:focus,
+.amplify-field input[type="time"]:focus {
+  outline: none !important;
+  border-color: var(--orange-button-color) !important;
+  box-shadow: 0 0 0 3px rgba(188, 108, 37, 0.25) !important;
+}
+
+input[type="date"]:hover,
+input[type="time"]:hover,
+.amplify-input[type="date"]:hover,
+.amplify-input[type="time"]:hover,
+.amplify-field input[type="date"]:hover,
+.amplify-field input[type="time"]:hover {
+  border-color: var(--orange-button-color) !important;
 }
 
 .form > button {
