@@ -1,3 +1,4 @@
+import logging
 import html
 from datetime import datetime
 
@@ -10,18 +11,19 @@ from daily_update_helpers.daily_updates_email_service import (
 )
 from daily_update_helpers.new_york_cares_web_scraper import NewYorkCaresWebScraper
 
+logger = logging.getLogger(__name__)
+
 
 class NewYorkCaresBot:
     def notify_if_new_volunteering_opportunities(self):
-        print("Starting New York Cares volunteering opportunity notification process")
+        logger.info("Starting New York Cares volunteering scrape")
 
         try:
-            # Build the email HTML but do not send (daily_updates_email_service will send)
             body_html = self.scrape_data_and_return_email_html()
             return body_html
 
         except Exception as e:
-            print("Exception:", e)
+            logger.error("Error in New York Cares bot: %s", str(e), exc_info=True)
             error_message = traceback.format_exc()
             DailyUpdateEmailService().send_error_email(error_message)
             raise e
@@ -33,9 +35,10 @@ class NewYorkCaresBot:
 
         current = scraper.find_weekend_opportunities()
         if not current:
+            logger.info("No New York Cares opportunities found")
             return ""
 
-        # update DB with current (overwrite)
+        logger.info("Found %d New York Cares opportunities", len(current))
         db.update_volunteering_for_org("New York Cares", current)
 
         return self.build_volunteer_email(current)
@@ -63,7 +66,7 @@ class NewYorkCaresBot:
             if pd:
                 grouped.setdefault(pd, []).append(opp)
             else:
-                print("Date unknown for opportunity:", opp)
+                logger.warning("Could not parse date for opportunity: %s", opp.get("title", "unknown"))
 
         cell_style = "border: 1px solid #ddd; padding: 8px;"
         table_rows = ""

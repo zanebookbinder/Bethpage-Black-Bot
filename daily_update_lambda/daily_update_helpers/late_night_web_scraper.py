@@ -1,3 +1,4 @@
+import logging
 import time
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -11,6 +12,8 @@ from daily_update_helpers.daily_update_constants import (
     IOTIA_BASE_URL,
     IOTIA_URL_TO_SHOW_NAME,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class WaitlistEntry:
@@ -54,22 +57,17 @@ class LateNightWebScraper:
         """
         waitlist_entries = {}  # (show_url: list of waitlist entries)
 
-        print(
-            f"Checking {len(IOTIA_URL_TO_SHOW_NAME)} late night shows for waitlist opportunities"
-        )
+        logger.info("Checking %d late night shows for waitlist opportunities", len(IOTIA_URL_TO_SHOW_NAME))
 
-        # Visit each show page directly and check for waitlist opportunities
         for show_url, show_name in IOTIA_URL_TO_SHOW_NAME.items():
             try:
-                print(f"Checking show: {show_name}")
+                logger.debug("Checking show: %s", show_name)
                 waitlist_entries[show_name] = self.find_available_waitlists_for_show(
                     show_url
                 )
-                print(
-                    f"Found {len(waitlist_entries[show_name])} waitlist opportunities for this show"
-                )
+                logger.debug("Found %d waitlist opportunities for %s", len(waitlist_entries[show_name]), show_name)
             except Exception as e:
-                print(f"Error processing show {show_name} {show_url}: {e}")
+                logger.error("Error processing show %s: %s", show_name, str(e), exc_info=True)
                 raise e
 
         return waitlist_entries
@@ -85,7 +83,7 @@ class LateNightWebScraper:
 
         calendar_dates, calendar_icon_div = self.find_show_dates()
         if not calendar_dates:
-            print(f"No calendar dates found for {show_url}")
+            logger.debug("No calendar dates found for %s", show_url)
             return waitlist_entries
 
         calendar_dates_list = [
@@ -95,9 +93,7 @@ class LateNightWebScraper:
         calendar_dates_list_not_null = [
             (k, v) for k, v in calendar_dates_list if (v is not None and k is not None)
         ]
-        print(
-            f"Non-null calendar dates: {', '.join([k for k, v in calendar_dates_list_not_null])}"
-        )
+        logger.debug("Found %d calendar dates for show", len(calendar_dates_list_not_null))
 
         # Track already checked dates to avoid repeats
         checked_dates = set()
@@ -112,7 +108,7 @@ class LateNightWebScraper:
 
                     # Parse the date
                     if date_text in checked_dates:
-                        print(f"Date {date_text} already checked, skipping")
+                        logger.debug("Date %s already checked, skipping", date_text)
                         i += 1
                         continue
 
@@ -144,7 +140,7 @@ class LateNightWebScraper:
                     try:
                         calendar_icon_div.click()
                     except Exception as e:
-                        print(f"Error clicking on the first calendar icon div: {e}")
+                        logger.debug("Error clicking calendar icon: %s", str(e))
                 calendar_dates, calendar_icon_div = self.find_show_dates()
                 calendar_dates_list = [
                     (self.get_date_text_from_date_element(date), date)
@@ -190,7 +186,7 @@ class LateNightWebScraper:
         Returns True if sold out, False otherwise.
         """
         if "SOLD OUT" in date_text:
-            print(f"Date {date_text.replace('SOLD OUT', '')} is sold out, skipping")
+            logger.debug("Date %s is sold out, skipping", date_text.replace('SOLD OUT', ''))
             return True
         return False
 
@@ -210,9 +206,9 @@ class LateNightWebScraper:
             try:
                 screenshot_filename = f"screenshot_{date_text.replace(' ', '_')}.png"
                 self.driver.save_screenshot(screenshot_filename)
-                print(f"Screenshot saved: {screenshot_filename}")
+                logger.debug("Screenshot saved: %s", screenshot_filename)
             except Exception as screenshot_exc:
-                print(f"Failed to take screenshot for {date_text}: {screenshot_exc}")
+                logger.warning("Failed to take screenshot for %s: %s", date_text, str(screenshot_exc))
 
     def check_for_waitlist(self, date_text, show_url):
         """
@@ -250,7 +246,7 @@ class LateNightWebScraper:
                 )
                 return waitlist_entry
         except Exception as e:
-            print(f"No waitlist button found for date {date_text}: {e}")
+            logger.debug("No waitlist button found for date %s", date_text)
 
         return None
 
@@ -277,14 +273,14 @@ class LateNightWebScraper:
                 "//ul[contains(@class, 'tabList')]//li//div[@id='dayDivCalendar']",
             )
 
-            print(f"Found {len(date_tabs)} date tabs")
+            logger.debug("Found %d date tabs", len(date_tabs))
             print(
                 f"Found {len(calendar_icon_divs)} calendar icon divs with id='dayDivCalendar'"
             )
             return date_tabs, calendar_icon_divs[0] if calendar_icon_divs else None
 
         except Exception as e:
-            print(f"Error finding calendar dates: {e}")
+            logger.error("Error finding calendar dates: %s", str(e))
             raise e
 
     def _find_main_button(self):
@@ -321,7 +317,7 @@ class LateNightWebScraper:
                         return button
 
         except Exception as e:
-            print(f"Error finding main button: {e}")
+            logger.debug("No main button found")
 
         return None
 

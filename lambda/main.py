@@ -1,6 +1,11 @@
+import logging
 from bethpage_black_bot import BethpageBlackBot
 from api_gateway_handler import ApiGatewayHandler
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
+
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
 
 def lambda_handler(event, context):
     # If the event came from API Gateway (HTTP API)

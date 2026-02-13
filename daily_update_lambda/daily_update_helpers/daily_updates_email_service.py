@@ -1,5 +1,8 @@
+import logging
 import boto3
 from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretHandler
+
+logger = logging.getLogger(__name__)
 
 
 class DailyUpdateEmailService:
@@ -9,9 +12,9 @@ class DailyUpdateEmailService:
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     def send_combined_email(self, html_pieces, subject: str = "Zane's Daily Update"):
-        print(f"Sending Daily Update email to {self.daily_update_emails}")
-
         html_pieces = [piece for piece in html_pieces if piece is not None]
+        logger.info("Sending daily update email to %d recipients with %d sections",
+                   len(self.daily_update_emails), len(html_pieces))
 
         body_html = (
             "<html><body style=\"font-family: 'Roboto', Arial, sans-serif;\">"
@@ -28,10 +31,10 @@ class DailyUpdateEmailService:
             },
         )
 
-        print("Email sent successfully.")
+        logger.info("Daily update email sent successfully")
 
     def send_error_email(self, error_as_str):
-        print(f"Sending error email to {self.admin_email}")
+        logger.error("Sending daily update error notification email")
 
         self.ses.send_email(
             Source=self.admin_email,

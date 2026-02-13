@@ -1,11 +1,17 @@
+import logging
 from late_night_show_bot import LateNightShowBot
 from new_york_cares_bot import NewYorkCaresBot
 from central_park_public_volunteering_bot import CentralParkPublicVolunteeringBot
 from central_park_private_volunteering_bot import CentralParkPrivateVolunteeringBot
 from daily_update_helpers.daily_updates_email_service import DailyUpdateEmailService
 
+# Configure logging
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
 
 def lambda_handler(event, context):
+    logger.info("Starting daily update process")
     # 1) get email response for late night shows
     late_night_bot = LateNightShowBot()
     late_night_html = late_night_bot.scrape_data_and_return_email_html()
@@ -29,6 +35,7 @@ def lambda_handler(event, context):
         subject="Zane's Daily Update",
     )
 
+    logger.info("Daily update process completed successfully")
     return {"message": "Zane's Daily Update sent."}
 
 

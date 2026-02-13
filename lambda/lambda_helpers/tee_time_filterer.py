@@ -1,3 +1,4 @@
+import logging
 from astral.sun import sun
 from astral import LocationInfo
 from datetime import datetime, timedelta
@@ -6,6 +7,8 @@ import holidays
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
 from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
 
+logger = logging.getLogger(__name__)
+
 
 class TeeTimeFilterer:
 
@@ -13,7 +16,6 @@ class TeeTimeFilterer:
         try:
             self.db_table = DynamoDBConnection()
 
-            # LOCATION AND HOILDAY CONFIG
             self.bethpage_info = LocationInfo(
                 "Farmingdale", "USA", "America/New_York", 40.7326, -73.4457
             )
@@ -25,39 +27,33 @@ class TeeTimeFilterer:
             ]
             self.date_handler = DateHandler()
         except Exception as e:
-            print("ERROR WITH TEE_TIME_FILTERER SETUP", e)
+            logger.error("Error initializing TeeTimeFilterer: %s", str(e), exc_info=True)
             raise e
 
     def filter_tee_times_for_user(self, tee_times_to_consider, user_email):
-        print("Getting config for user:", user_email)
+        logger.debug("Filtering %d tee times for user: %s", len(tee_times_to_consider), user_email)
         user_config = self.get_user_config_as_object(user_email)
 
         if not user_config.notifications_enabled:
-            print("User doesn't have notifications enabled. Continuing...")
+            logger.debug("User %s has notifications disabled", user_email)
             return []
 
         filtered_tee_times = []
 
         for tee_time in tee_times_to_consider:
-            # {Date: "Tuesday, May 27th", Time: "4:30pm", Players: "2", Holes: "18"}
             day_of_week, date_obj = self.parse_date_string(tee_time["Date"])
 
-            # is ok day (weekend, holiday, etc.)
             is_playable_day = self.is_playable_day(user_config, day_of_week, date_obj)
 
-            # is acceptable time (after min time and before sunset)
             tee_time_of_day = datetime.strptime(tee_time["Time"], "%I:%M%p").time()
             is_acceptable_time = self.is_far_enough_before_sunset(
                 user_config, date_obj, tee_time_of_day
             ) and self.is_after_earliest_acceptable_time(user_config, tee_time_of_day)
 
-            # is greater than the minimum number of players
             hits_min_players = int(tee_time["Players"]) >= user_config.min_players
 
-            # MANDATORY CONDITION: holes = 18
             has_18_holes = tee_time["Holes"] == 18 or tee_time["Holes"] == "18"
 
-            # then yes, this tee time is ok
             if (
                 is_playable_day
                 and is_acceptable_time
@@ -66,7 +62,7 @@ class TeeTimeFilterer:
             ):
                 filtered_tee_times.append(tee_time)
 
-        print("Tee times after filtering:", filtered_tee_times)
+        logger.debug("Filtered to %d tee times for user %s", len(filtered_tee_times), user_email)
         return filtered_tee_times
 
     def is_after_earliest_acceptable_time(self, user_config, time_of_day):
@@ -118,37 +114,22 @@ class TeeTimeFilterer:
         config_data = self.db_table.get_user_config(user_email)
         return BethpageBlackBotConfig(config_data)
 
-    def output_current_config(self):
-        print(
-            "CONFIG LOADED:\n"
-            f"  Playable Days of Week: {self.playable_days_of_week}\n"
-            f"  Earliest Playable Time: {self.earliest_playable_time}\n"
-            f"  Extra Playable Days: {self.extra_playable_days}\n"
-            f"  Include Holidays: {self.include_holidays}\n"
-            f"  Minimum Minutes Before Sunset: {self.minimum_minutes_before_sunset}\n"
-            f"  Minimum Players: {self.min_players}"
-        )
-
     def remove_existing_tee_times(self, times_from_site, existing_times):
-        print("Existing times in database:", existing_times)
-
         if existing_times:
-            # Sort existing times
             existing_times_set = set(
                 tuple(sorted(item.items())) for item in existing_times
             )
 
-            # Find items on current site that aren't in the existing db table
             new_times = [
                 item
                 for item in times_from_site
                 if tuple(sorted(item.items())) not in existing_times_set
             ]
         else:
-            print("No existing times. Considering all times as new")
+            logger.debug("No existing times in database, all times are new")
             new_times = times_from_site
 
-        print("New times (to notify about):", new_times)
+        logger.debug("Found %d new times after diff", len(new_times))
         return new_times
 
 

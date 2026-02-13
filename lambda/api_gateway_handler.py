@@ -1,3 +1,4 @@
+import logging
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
 from lambda_helpers.email_sender import EmailSender
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
@@ -6,20 +7,16 @@ import json
 import traceback
 import time
 
+logger = logging.getLogger(__name__)
+
 
 class ApiGatewayHandler:
     def __init__(self):
         self.email_sender = EmailSender()
-        self.verbose = False
 
     def handle(self, event):
         headers = event.get("headers", {})
         origin = headers.get("origin") or headers.get("Origin")
-
-        if self.verbose:
-            print("EVENT", event)
-            print("HEADERS", headers)
-            print("ORIGIN", origin)
 
         allowed_origins = [
             "http://localhost:3000",
@@ -27,13 +24,13 @@ class ApiGatewayHandler:
         ]
 
         if origin not in allowed_origins:
-            print(f"Invalid origin. Origin={origin}, AllowedOrigins={allowed_origins}")
+            logger.warning("Invalid origin rejected: %s", origin)
             return {"statusCode": 403, "body": "Forbidden: Invalid origin"}
 
         try:
             method, path = event["routeKey"].split()
             start_time = time.time()
-            print(f"[START] API call to route {path} with method {method}")
+            logger.info("API request: %s %s", method, path)
 
             response_body = {}
             status_code = 200
@@ -107,14 +104,11 @@ class ApiGatewayHandler:
                 response_body = {"error": "Unsupported route"}
                 status_code = 404
 
-            print(
-                f"[END] API call to route {path} with method {method}, Elapsed={time.time() - start_time}"
-            )
-            print("Response Body: " + str(response_body))
+            elapsed_time = time.time() - start_time
+            logger.info("API response: %s %s (%.2fs) - status %d", method, path, elapsed_time, status_code)
             return self.format_api_response(response_body, status_code)
         except Exception as e:
-            print("ERROR: " + str(e))
-            traceback.print_exc()
+            logger.error("API error processing %s: %s", event.get("routeKey", "unknown"), str(e), exc_info=True)
             response_body = {"Error": "Error during API route processing:" + str(e)}
             return self.format_api_response(response_body, 404)
 
@@ -150,22 +144,19 @@ class ApiGatewayHandler:
         ddc.create_or_update_user_config(user_email, post_request_body)
 
     def create_one_time_link_and_send(self, event):
-        # GET THE USER'S EMAIL FROM EVENT
         post_request_body = json.loads(event.get("body", "{}"))
         user_email = post_request_body["email"]
         found_user, _ = self.get_user_config(event, user_email)
         if not found_user:
-            response_str = f"Tried to get one time link for email that wasn't registered: {user_email}"
-            print(response_str)
-            return False, response_str
+            logger.warning("One-time link requested for unregistered email: %s", user_email)
+            return False, f"Email not registered: {user_email}"
 
-        # CREATE, SAVE, AND EMAIL THE LINK
         otlh = OneTimeLinkHandler()
         otlh.handle_one_time_link_creation(user_email)
+        logger.info("One-time link created and sent to %s", user_email)
         return True, "Successfully created and send a one time link"
 
     def validate_one_time_link(self, event):
-        # GET THE CURRENT GUID FROM BROWSER
         post_request_body = json.loads(event.get("body", "{}"))
         guid_in_browser = post_request_body["guid"]
 
@@ -174,9 +165,10 @@ class ApiGatewayHandler:
         is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(
             guid_in_browser
         )
-        print(
-            f"Validated one time link. Success={is_link_valid}, Email or error message={emailOrErrorMessage}"
-        )
+        if is_link_valid:
+            logger.info("One-time link validated for email: %s", emailOrErrorMessage)
+        else:
+            logger.warning("One-time link validation failed: %s", emailOrErrorMessage)
 
         return is_link_valid, emailOrErrorMessage
 

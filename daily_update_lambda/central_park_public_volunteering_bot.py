@@ -1,6 +1,9 @@
+import logging
 import requests
 from bs4 import BeautifulSoup
 from daily_update_helpers.daily_update_constants import CENTRAL_PARK_PUBLIC_URL
+
+logger = logging.getLogger(__name__)
 
 
 class CentralParkPublicVolunteeringBot:
@@ -9,9 +12,7 @@ class CentralParkPublicVolunteeringBot:
         self.session = requests.Session()
 
     def scrape_data_and_return_email_html(self):
-        print(
-            "Starting Central Park public volunteering community day notification process"
-        )
+        logger.info("Starting Central Park public volunteering scrape")
         try:
             response = self.session.get(self.url)
             response.raise_for_status()
@@ -54,14 +55,15 @@ class CentralParkPublicVolunteeringBot:
             return self._generate_email_html(available_events)
 
         except Exception as e:
-            print(f"Error scraping Central Park public volunteering: {e}")
+            logger.error("Error scraping Central Park public volunteering: %s", str(e), exc_info=True)
             return self._generate_error_html()
 
     def _generate_email_html(self, events):
         if not events:
+            logger.info("No Central Park public volunteering events found")
             return "<h2>Central Park Community Days</h2><p>No available volunteering opportunities at this time.</p>"
 
-        print(f"Found {len(events)} events")
+        logger.info("Found %d Central Park public volunteering events", len(events))
         table_rows = ""
         for event in events:
             table_rows += f"""

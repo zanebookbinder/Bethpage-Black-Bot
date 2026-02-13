@@ -1,6 +1,9 @@
+import logging
 import boto3
 from collections import defaultdict
 from lambda_helpers.secret_handler import SecretHandler
+
+logger = logging.getLogger(__name__)
 
 WELCOME_EMAIL_TEXT = \
     "Welcome! You've signed up to receive notifications " \
@@ -28,7 +31,7 @@ class EmailSender:
     BOOKING_URL = "https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes"
 
     def send_email(self, email, new_times):
-        print(f'Sending email to {email}')
+        logger.info("Sending tee time notification to %s with %d new times", email, len(new_times))
         # Group times by date
         grouped = defaultdict(list)
         for time in new_times:
@@ -80,7 +83,7 @@ class EmailSender:
         )
 
     def send_error_email(self, error_as_str):
-        print(f'Sending error email to {self.admin_email}')
+        logger.error("Sending error notification email")
 
         self.ses.send_email(
             Source=self.admin_email,
@@ -92,7 +95,7 @@ class EmailSender:
         )
 
     def send_one_time_link_email(self, email, guid, welcome_email=False):
-        print(f'Sending one time link email to {email}')
+        logger.info("Sending one-time link email to %s (welcome=%s)", email, welcome_email)
         
         email_subject = WELCOME_EMAIL_SUBJECT if welcome_email else ONE_TIME_LINK_EMAIL_SUBJECT
         link = f"{FRONTEND_URL}/updateSettings/{guid}"

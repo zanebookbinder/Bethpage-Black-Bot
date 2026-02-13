@@ -3,6 +3,7 @@ Central Park private volunteering bot - scrapes MyImpactPage/Better Impact
 for volunteer opportunities with space available (login required).
 """
 
+import logging
 import html
 from collections import defaultdict
 from datetime import datetime
@@ -10,6 +11,8 @@ import holidays
 from daily_update_helpers.daily_updates_secret_handler import DailyUpdateSecretHandler
 from daily_update_helpers.daily_update_constants import MYIMPACTPAGE_OPPORTUNITIES_URL
 from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
+
+logger = logging.getLogger(__name__)
 
 
 class CentralParkPrivateVolunteeringBot:
@@ -24,22 +27,17 @@ class CentralParkPrivateVolunteeringBot:
         ]
 
     def scrape_data_and_return_email_html(self):
-        print(
-            "Starting Central Park private volunteering (MyImpactPage) notification process"
-        )
+        logger.info("Starting Central Park private volunteering (MyImpactPage) scrape")
         scraper = None
         try:
             username, password = DailyUpdateSecretHandler.get_myimpactpage_credentials()
             if not username or not password:
-                print(
-                    "MyImpactPage credentials not found in secrets. "
-                    "Add myimpactpage-username and myimpactpage-password to daily-updates-secret."
-                )
+                logger.error("MyImpactPage credentials not found in secrets")
                 return self._generate_error_html()
 
             scraper = MyImpactPageWebScraper()
             if not scraper.login(username, password):
-                print("Failed to log in to MyImpactPage")
+                logger.error("Failed to log in to MyImpactPage")
                 return self._generate_error_html()
 
             opportunities = scraper.get_opportunities_with_space_available()
@@ -47,7 +45,7 @@ class CentralParkPrivateVolunteeringBot:
             return self._generate_email_html(opportunities)
 
         except Exception as e:
-            print(f"Error scraping Central Park private volunteering: {e}")
+            logger.error("Error scraping Central Park private volunteering: %s", str(e), exc_info=True)
             return self._generate_error_html()
         finally:
             if scraper:
@@ -92,14 +90,13 @@ class CentralParkPrivateVolunteeringBot:
         opportunities = filtered_opportunities
 
         if not opportunities:
+            logger.info("No Central Park private volunteering opportunities found (weekends/holidays)")
             return (
                 "<h2>Central Park Private Volunteering (MyImpactPage)</h2>"
                 "<p>No weekend or holiday opportunities with space available at this time.</p>"
             )
 
-        print(
-            f"Found {len(opportunities)} shift(s) with space available (filtered to weekends/holidays)"
-        )
+        logger.info("Found %d Central Park private volunteering shifts (weekends/holidays)", len(opportunities))
 
         # Group by date (date on left, grouped), sort soonest to farthest
         by_date = defaultdict(list)

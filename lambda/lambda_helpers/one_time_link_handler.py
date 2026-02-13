@@ -1,7 +1,10 @@
+import logging
 import uuid
 import boto3
 from lambda_helpers.email_sender import EmailSender
 from datetime import datetime, timedelta, timezone
+
+logger = logging.getLogger(__name__)
 
 ONE_TIME_LINKS_TABLE_NAME = "bethpage-black-bot-one-time-links"
 EXPIRE_TIME_KEY = "expire_time"
@@ -27,12 +30,10 @@ class OneTimeLinkHandler:
             self.email_sender = EmailSender()
 
         one_time_link_object = self.generate_one_time_link(email)
-        print("Created one time link object:", self.one_time_link_to_str(one_time_link_object))
+        logger.debug("Generated one-time link for %s", email)
         guid = one_time_link_object['id']
         self.one_time_link_table.put_item(Item=one_time_link_object)
-        print("Put one time link item into database table")
         self.email_sender.send_one_time_link_email(email, guid, welcome_email)
-        print("Sent link to user")
 
     def is_one_time_link_valid(self, one_time_link_item):
         expire_time_str = one_time_link_item.get(EXPIRE_TIME_KEY)
@@ -58,34 +59,36 @@ class OneTimeLinkHandler:
             return self.is_one_time_link_valid(item)
 
         except Exception as e:
-            print(f"Error checking UUID in DynamoDB: {e}")
+            logger.error("Error validating one-time link: %s", str(e))
             return False, f"Unknown error: {e}"
-        
+
     def get_all_link_objects(self):
         all_items = []
         scan_kwargs = {}
-        
+
         while True:
             response = self.one_time_link_table.scan(**scan_kwargs)
             all_items.extend(response.get("Items", []))
 
-            # If LastEvaluatedKey is present, there are more items to fetch
             if "LastEvaluatedKey" in response:
                 scan_kwargs["ExclusiveStartKey"] = response["LastEvaluatedKey"]
             else:
                 break
 
         return all_items
-    
+
     def remove_old_one_time_links(self):
-        print('Removing old one time links from database')
-        
+        logger.info("Cleaning up expired one-time links")
+
         all_link_items = self.get_all_link_objects()
+        removed_count = 0
         for item in all_link_items:
             is_link_active, message = self.is_one_time_link_valid(item)
             if not is_link_active:
-                print("Removing one time link:", self.one_time_link_to_str(item))
                 self.one_time_link_table.delete_item(Key={"id": item["id"]})
+                removed_count += 1
+
+        logger.info("Removed %d expired one-time links", removed_count)
 
     def one_time_link_to_str(self, one_time_link_item):
         return f"[id={one_time_link_item['id']}, email='{one_time_link_item['email']}',\
