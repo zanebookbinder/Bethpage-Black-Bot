@@ -70,17 +70,21 @@ export default function CurrentTeeTimes() {
                         </Flex>
                     </View>
 
-                    <View marginTop="1.5rem">
+                    <Flex
+                        marginTop="1.5rem"
+                        direction="row"
+                        wrap="wrap"
+                        gap="1rem"
+                    >
                         {recentTeeTimes.map((teeTime, index) => (
-                            <View key={index} marginBottom="1rem">
-                                <CurrentTeeTime
-                                    date={teeTime.Date}
-                                    time={teeTime.Time}
-                                    players={teeTime.Players}
-                                />
-                            </View>
+                            <CurrentTeeTime
+                                key={index}
+                                date={teeTime.Date}
+                                time={teeTime.Time}
+                                players={teeTime.Players}
+                            />
                         ))}
-                    </View>
+                    </Flex>
                 </View>
             ) : (
                 <View>
