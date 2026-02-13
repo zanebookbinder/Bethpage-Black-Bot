@@ -37,15 +37,6 @@ export function isValidDate(dateStr) {
     // Construct the date
     const date = new Date(year, month - 1, day);
 
-    // Validate date parts
-    if (
-        date.getFullYear() !== year ||
-        date.getMonth() !== month - 1 ||
-        date.getDate() !== day
-    ) {
-        return false;
-    }
-
     const now = new Date();
     now.setHours(0, 0, 0, 0); // Normalize to midnight for comparison
 
