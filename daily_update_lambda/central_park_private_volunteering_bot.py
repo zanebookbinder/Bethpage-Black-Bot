@@ -107,13 +107,14 @@ class CentralParkPrivateVolunteeringBot:
             by_date[opp.get("date", "")].append(opp)
 
         def _parse_sort_key(date_str: str):
-            """Parse date for sorting. Returns (datetime, original) - unparseable go last."""
+            """Parse date for sorting. Returns datetime - unparseable go last."""
             for fmt in CentralParkPrivateVolunteeringBot.DATE_FORMATS:
                 try:
                     return datetime.strptime(date_str.strip(), fmt)
                 except ValueError:
                     continue
-            return (datetime.max, date_str)
+            logger.warning("Could not parse date '%s' - it will be sorted to the end of the list", date_str)
+            return datetime.max
 
         table_rows = ""
         for date in sorted(by_date.keys(), key=_parse_sort_key):
