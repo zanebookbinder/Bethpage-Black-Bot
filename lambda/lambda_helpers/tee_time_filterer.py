@@ -9,20 +9,20 @@ from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
 
 class TeeTimeFilterer:
 
-    def __init__(self):
+    def __init__(self, db_connection=None):
         try:
-            self.db_table = DynamoDBConnection()
+            self.db_table = db_connection if db_connection else DynamoDBConnection()
 
             # LOCATION AND HOILDAY CONFIG
             self.bethpage_info = LocationInfo(
                 "Farmingdale", "USA", "America/New_York", 40.7326, -73.4457
             )
             us_holidays = holidays.UnitedStates(years=datetime.now().year)
-            self.holiday_dates = [
+            self.holiday_dates = {
                 f"{date.month}/{date.day}/{date.year}"
                 for date, name in us_holidays.items()
                 if "Veterans Day" not in name
-            ]
+            }
             self.date_handler = DateHandler()
         except Exception as e:
             print("ERROR WITH TEE_TIME_FILTERER SETUP", e)

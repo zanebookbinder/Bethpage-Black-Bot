@@ -10,6 +10,8 @@ import time
 class ApiGatewayHandler:
     def __init__(self):
         self.email_sender = EmailSender()
+        self.ddc = DynamoDBConnection()
+        self.otlh = OneTimeLinkHandler()
         self.verbose = False
 
     def handle(self, event):
@@ -119,35 +121,30 @@ class ApiGatewayHandler:
             return self.format_api_response(response_body, 404)
 
     def get_recent_times_from_db(self):
-        ddc = DynamoDBConnection()
-        return ddc.get_latest_tee_times_all()
+        return self.ddc.get_latest_tee_times_all()
 
     def register_new_user(self, event):
-        ddc = DynamoDBConnection()
-        otlh = OneTimeLinkHandler()
         body = json.loads(event.get("body", "{}"))
         email = body.get("email")
 
-        success, message = ddc.add_email_to_all_emails_list(email)
+        success, message = self.ddc.add_email_to_all_emails_list(email)
         if not success:
             return False, message
 
-        ddc.create_or_update_user_config(email, body)
-        otlh.handle_one_time_link_creation(email, True)
+        self.ddc.create_or_update_user_config(email, body)
+        self.otlh.handle_one_time_link_creation(email, True)
         return True, ""
 
     def get_user_config(self, event, user_email=None):
-        ddc = DynamoDBConnection()
         post_request_body = json.loads(event.get("body", "{}"))
         user_email = user_email if user_email else post_request_body["email"]
-        config_or_none = ddc.get_user_config(user_email)
+        config_or_none = self.ddc.get_user_config(user_email)
         return (True, config_or_none) if config_or_none else (False, None)
 
     def create_or_update_user_config(self, event):
-        ddc = DynamoDBConnection()
         post_request_body = json.loads(event.get("body", "{}"))
         user_email = post_request_body["email"]
-        ddc.create_or_update_user_config(user_email, post_request_body)
+        self.ddc.create_or_update_user_config(user_email, post_request_body)
 
     def create_one_time_link_and_send(self, event):
         # GET THE USER'S EMAIL FROM EVENT
@@ -160,8 +157,7 @@ class ApiGatewayHandler:
             return False, response_str
 
         # CREATE, SAVE, AND EMAIL THE LINK
-        otlh = OneTimeLinkHandler()
-        otlh.handle_one_time_link_creation(user_email)
+        self.otlh.handle_one_time_link_creation(user_email)
         return True, "Successfully created and send a one time link"
 
     def validate_one_time_link(self, event):
@@ -169,9 +165,7 @@ class ApiGatewayHandler:
         post_request_body = json.loads(event.get("body", "{}"))
         guid_in_browser = post_request_body["guid"]
 
-        otlh = OneTimeLinkHandler()
-
-        is_link_valid, emailOrErrorMessage = otlh.validate_one_time_link_and_get_email(
+        is_link_valid, emailOrErrorMessage = self.otlh.validate_one_time_link_and_get_email(
             guid_in_browser
         )
         print(

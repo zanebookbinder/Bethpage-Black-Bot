@@ -3,53 +3,36 @@ import json
 
 
 class SecretHandler:
+    _secret_cache = {}
+    _client = None
 
-    def get_bethpage_username_and_password():
-        secret_name = "bethpage-secret"
-        region_name = "us-east-1"
+    @classmethod
+    def _get_client(cls):
+        """Reuse a single Secrets Manager client across all calls."""
+        if cls._client is None:
+            cls._client = boto3.client(service_name="secretsmanager", region_name="us-east-1")
+        return cls._client
 
-        # Create a Secrets Manager client
-        session = boto3.session.Session()
-        client = session.client(service_name="secretsmanager", region_name=region_name)
+    @classmethod
+    def _get_secret(cls, secret_name):
+        """Fetch and cache secrets to avoid duplicate API calls."""
+        if secret_name not in cls._secret_cache:
+            client = cls._get_client()
+            response = client.get_secret_value(SecretId=secret_name)
+            cls._secret_cache[secret_name] = json.loads(response["SecretString"])
+        return cls._secret_cache[secret_name]
 
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
+    @classmethod
+    def get_bethpage_username_and_password(cls):
+        secret = cls._get_secret("bethpage-secret")
+        return secret.get("bethpage_email"), secret.get("bethpage_password")
 
-        secret_string = get_secret_value_response["SecretString"]
-        secret = json.loads(secret_string)
-
-        # Extract username and password
-        username = secret.get("bethpage_email")
-        password = secret.get("bethpage_password")
-        return username, password
-
-    def get_sender_email():
-        secret_name = "bethpage-sender-email-secret"
-        region_name = "us-east-1"
-
-        # Create a Secrets Manager client
-        session = boto3.session.Session()
-        client = session.client(service_name="secretsmanager", region_name=region_name)
-
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-
-        secret_string = get_secret_value_response["SecretString"]
-        secret = json.loads(secret_string)
-
-        # Extract username and password
+    @classmethod
+    def get_sender_email(cls):
+        secret = cls._get_secret("bethpage-sender-email-secret")
         return secret.get("sender_email")
-    
-    def get_one_time_link_sender_email():
-        secret_name = "bethpage-sender-email-secret"
-        region_name = "us-east-1"
 
-        # Create a Secrets Manager client
-        session = boto3.session.Session()
-        client = session.client(service_name="secretsmanager", region_name=region_name)
-
-        get_secret_value_response = client.get_secret_value(SecretId=secret_name)
-
-        secret_string = get_secret_value_response["SecretString"]
-        secret = json.loads(secret_string)
-
-        # Extract username and password
+    @classmethod
+    def get_one_time_link_sender_email(cls):
+        secret = cls._get_secret("bethpage-sender-email-secret")
         return secret.get("one_time_link_email")

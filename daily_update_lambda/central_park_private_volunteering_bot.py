@@ -15,6 +15,15 @@ from daily_update_helpers.myimpactpage_web_scraper import MyImpactPageWebScraper
 class CentralParkPrivateVolunteeringBot:
     """Scrapes Central Park private volunteering opportunities from MyImpactPage."""
 
+    # Date format strings for parsing dates in various formats
+    DATE_FORMATS = (
+        "%A, %B %d, %Y",
+        "%m/%d/%Y",
+        "%m/%d/%y",
+        "%Y-%m-%d",
+        "%B %d, %Y",
+    )
+
     def __init__(self):
         us_holidays = holidays.UnitedStates(years=datetime.now().year)
         self.holiday_dates = [
@@ -67,13 +76,7 @@ class CentralParkPrivateVolunteeringBot:
             try:
                 # Parse date using the same formats as _parse_sort_key
                 parsed_date = None
-                for fmt in (
-                    "%m/%d/%Y",
-                    "%m/%d/%y",
-                    "%Y-%m-%d",
-                    "%B %d, %Y",
-                    "%A, %B %d, %Y",
-                ):
+                for fmt in self.DATE_FORMATS:
                     try:
                         parsed_date = datetime.strptime(date_str.strip(), fmt)
                         break
@@ -108,13 +111,7 @@ class CentralParkPrivateVolunteeringBot:
 
         def _parse_sort_key(date_str: str):
             """Parse date for sorting. Returns (datetime, original) - unparseable go last."""
-            for fmt in (
-                "%A, %B %d, %Y",
-                "%m/%d/%Y",
-                "%m/%d/%y",
-                "%Y-%m-%d",
-                "%B %d, %Y",
-            ):
+            for fmt in CentralParkPrivateVolunteeringBot.DATE_FORMATS:
                 try:
                     return datetime.strptime(date_str.strip(), fmt)
                 except ValueError:

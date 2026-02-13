@@ -29,7 +29,7 @@ class BethpageBlackBot:
     def get_new_tee_times(self):
         web_scraper = WebScraper(self.bethpage_email, self.bethpage_password)
         dynamo_db_connection = DynamoDBConnection()
-        tee_time_filterer = TeeTimeFilterer()
+        tee_time_filterer = TeeTimeFilterer(db_connection=dynamo_db_connection)
 
         # GET TEE TIME DATA FROM SITE
         tee_times = web_scraper.get_tee_time_data()
