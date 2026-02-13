@@ -12,19 +12,19 @@ logger = logging.getLogger(__name__)
 
 class TeeTimeFilterer:
 
-    def __init__(self):
+    def __init__(self, db_connection=None):
         try:
-            self.db_table = DynamoDBConnection()
+            self.db_table = db_connection if db_connection else DynamoDBConnection()
 
             self.bethpage_info = LocationInfo(
                 "Farmingdale", "USA", "America/New_York", 40.7326, -73.4457
             )
             us_holidays = holidays.UnitedStates(years=datetime.now().year)
-            self.holiday_dates = [
+            self.holiday_dates = {
                 f"{date.month}/{date.day}/{date.year}"
                 for date, name in us_holidays.items()
                 if "Veterans Day" not in name
-            ]
+            }
             self.date_handler = DateHandler()
         except Exception as e:
             logger.error("Error initializing TeeTimeFilterer: %s", str(e), exc_info=True)
