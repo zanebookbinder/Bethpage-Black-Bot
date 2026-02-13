@@ -1,3 +1,4 @@
+import logging
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -7,6 +8,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from lambda_helpers.date_handler import DateHandler
 import time
 import os
+
+logger = logging.getLogger(__name__)
 
 BETHPAGE_TEE_TIMES_WEBSITE_URL = 'https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes'
 
@@ -74,11 +77,11 @@ class WebScraper:
 
     def get_tee_time_data(self):
         if not self.login():
-            print("Couldn't log in. Exiting...")
+            logger.error("Login failed, aborting scrape")
             return []
 
         if not self.move_to_calendar_page():
-            print("Couldn't move to calendar page. Exiting...")
+            logger.error("Failed to navigate to calendar page, aborting scrape")
             return []
 
         tee_times = []
@@ -96,7 +99,7 @@ class WebScraper:
             self.add_available_times_from_day(next_day_formatted, tee_times)
             next_day_to_check = self.get_available_day(days_checked)
 
-        print(f"Found {len(tee_times)} tee times")
+        logger.info("Scraped %d tee times from %d days", len(tee_times), len(days_checked))
         self.driver.quit()
         return tee_times
 
@@ -112,12 +115,12 @@ class WebScraper:
                         By.XPATH,
                         "//h1[text()='Use Time/Day filters to find desired teetime']",
                     ):
-                        print(f"No times on {day_formatted}")
+                        logger.debug("No tee times available on %s", day_formatted)
                         return
                     time.sleep(0.25)
                     continue
 
-                print(f'Found {len(time_tiles)} times on {day_formatted}')
+                logger.debug("Found %d tee times on %s", len(time_tiles), day_formatted)
                 for tile in time_tiles:
                     self.add_time_to_dict(tile, tee_times, day_formatted)
                 return
@@ -127,16 +130,13 @@ class WebScraper:
                     By.XPATH,
                     "//h1[text()='Use Time/Day filters to find desired teetime']",
                 ):
-                    print(f"No times on {day_formatted}")
+                    logger.debug("No tee times available on %s", day_formatted)
                     return
                 if i < 4:
                     time.sleep(0.25)
-                    print(f"Retrying for the {i} time")
+                    logger.debug("Retrying tee time retrieval for %s (attempt %d)", day_formatted, i + 1)
                     continue
-                print(
-                    f"Error during tee time retrieval after {i} tries with {day_formatted}:\n",
-                    e,
-                )
+                logger.error("Failed to retrieve tee times for %s after %d attempts: %s", day_formatted, i + 1, str(e))
 
     def add_time_to_dict(self, tile, tee_times, day):
         start_time = tile.find_element(
@@ -157,7 +157,7 @@ class WebScraper:
             {"Date": day, "Time": start_time, "Players": players_number, "Holes": holes_number}
         )
 
-    def get_available_day(self, days_checked, print_results=False):
+    def get_available_day(self, days_checked, log_days=False):
         days = []
         current_day_cell = self.wait.until(
             EC.element_to_be_clickable((By.CSS_SELECTOR, "td.active.day"))
@@ -173,10 +173,10 @@ class WebScraper:
         days.extend(next_month_day_divs)
 
         unchecked_days = [d for d in days if d.text not in days_checked]
-        all_days_text = [d.text for d in days]
 
-        if print_results:
-            print('All days:', ', '.join(all_days_text))
+        if log_days:
+            all_days_text = [d.text for d in days]
+            logger.debug("Available days to check: %s", ', '.join(all_days_text))
 
         return unchecked_days[0] if unchecked_days else None
 
@@ -189,39 +189,35 @@ class WebScraper:
     def login(self):
         for i in range(5):
             try:
-                # Find and click the login button
                 login_button = self.driver.find_element(By.CSS_SELECTOR, "a.login")
                 self.driver.execute_script("arguments[0].click();", login_button)
 
-                # Find username/email and password input fields by their IDs
                 email_input = self.driver.find_element(By.ID, "login_email")
                 password_input = self.driver.find_element(By.ID, "login_password")
 
-                # Enter your credentials
                 email_input.send_keys(self.username)
                 password_input.send_keys(self.password)
 
-                # Submit form by pressing Enter in the password field
                 login_button = self.wait.until(
                     EC.element_to_be_clickable((By.CSS_SELECTOR, "button.login"))
                 )
                 self.driver.execute_script("arguments[0].click();", login_button)
 
-                print("Logged in successfully!")
+                logger.info("Successfully logged in to Bethpage website")
                 return True
             except Exception as e:
                 if i < 4:
                     time.sleep(0.5)
                     self.driver.save_screenshot("login_fail.png")
-                    print(f"Retrying for the {i} time")
+                    logger.debug("Login attempt %d failed, retrying", i + 1)
                     continue
-                print(f"Error during login after {i} tries:\n", e)
+                logger.error("Login failed after %d attempts: %s", i + 1, str(e))
                 return False
 
     def move_to_calendar_page(self):
         for i in range(5):
             try:
-                print("Attempting navigation to tee times page")
+                logger.debug("Navigating to tee times page")
 
                 resident_button = self.wait.until(
                     EC.element_to_be_clickable(
@@ -233,13 +229,13 @@ class WebScraper:
                 )
                 self.driver.execute_script("arguments[0].click();", resident_button)
                 if self.has_current_date_button():
-                    print("On tee times page")
+                    logger.info("Successfully navigated to tee times page")
                     return True
 
             except Exception as e:
                 if i < 4:
                     time.sleep(0.75)
-                    print(f"Retrying for the {i} time")
+                    logger.debug("Navigation attempt %d failed, retrying", i + 1)
                     continue
-                print(f"Error during login after {i} tries:\n", e)
+                logger.error("Failed to navigate to tee times page after %d attempts: %s", i + 1, str(e))
                 return False

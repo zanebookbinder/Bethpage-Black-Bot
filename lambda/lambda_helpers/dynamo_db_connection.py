@@ -1,6 +1,9 @@
+import logging
 import boto3
 from datetime import datetime
 from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
+
+logger = logging.getLogger(__name__)
 
 TEE_TIMES_TABLE_NAME = "tee-times"
 CONFIG_TABLE_NAME = "bethpage-black-bot-config"
@@ -35,39 +38,40 @@ class DynamoDBConnection:
     def get_latest_tee_times_object(self):
         response = self.table.get_item(Key = {'id': LATEST_TEE_TIMES_OBJECT_ID})
         if "Item" not in response:
-            print(f"No object with id={LATEST_TEE_TIMES_OBJECT_ID} found")
+            logger.warning("No latest tee times object found in DynamoDB")
             return None
         return response.get('Item')
-    
+
     def get_latest_filtered_tee_times(self):
         filtered_tee_times = self.get_latest_tee_times_object()[FILTERED_TEE_TIMES_OBJECT_ID]
         return filtered_tee_times
-    
+
     def get_latest_tee_times_all(self):
         all_tee_times = self.get_latest_tee_times_object()[ALL_TEE_TIMES_OBJECT_ID]
         return all_tee_times
-    
+
     def get_all_emails_list(self):
         response = self.config_table.get_item(Key = {'id': CONFIG_TABLE_ALL_EMAILS_ID})
         if "Item" not in response:
-            print(f"No object with id={CONFIG_TABLE_ALL_EMAILS_ID} found")
+            logger.warning("No email list found in DynamoDB config table")
             return None
-        return response.get('Item')['emails'] # list of emails as strings
-    
+        return response.get('Item')['emails']
+
     def add_email_to_all_emails_list(self, new_email):
         current_list = self.get_all_emails_list()
         if new_email in current_list:
-            print(f"Email is already in list. New email: {new_email}, List: {current_list}")
+            logger.info("Email already registered: %s", new_email)
             return False, "Email is already in list"
-        
+
         updated_emails_object = {'id': CONFIG_TABLE_ALL_EMAILS_ID, 'emails': current_list + [new_email]}
         self.config_table.put_item(Item=updated_emails_object)
+        logger.info("Added new email to list: %s", new_email)
         return True, ""
-    
+
     def get_user_config(self, email):
         response = self.config_table.get_item(Key={"id": email})
         if "Item" not in response:
-            print(f"No config object found for user {email}")
+            logger.debug("No config found for user: %s", email)
             return None
         item = response.get("Item")
         return item

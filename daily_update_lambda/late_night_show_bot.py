@@ -1,3 +1,4 @@
+import logging
 from daily_update_helpers.daily_updates_dynamo_db_connection import (
     DailyUpdateDynamoDbConnection,
 )
@@ -10,11 +11,13 @@ from daily_update_helpers.daily_updates_email_service import (
     DailyUpdateEmailService,
 )
 
+logger = logging.getLogger(__name__)
+
 
 class LateNightShowBot:
 
     def notify_if_new_waitlist_opportunities(self, verbose=False):
-        print("Starting late night show waitlist notification process")
+        logger.info("Starting late night show waitlist scrape")
 
         try:
             # Build the email HTML but do not send (daily_updates_email_service will send)
@@ -22,9 +25,8 @@ class LateNightShowBot:
             return body_html
 
         except Exception as e:
-            print("Exception:", e)
+            logger.error("Error in late night show bot: %s", str(e), exc_info=True)
             error_message = traceback.format_exc()
-            # use the email sender to notify of errors
             DailyUpdateEmailService().send_error_email(error_message)
             raise e
 
@@ -33,27 +35,10 @@ class LateNightShowBot:
         daily_updates_dynamo_db_connection = DailyUpdateDynamoDbConnection()
 
         try:
-            # Scrape the 1iota.com site for waitlist opportunities
             current_waitlist_entries = web_scraper.find_all_available_waitlists()
 
-            # Log the waitlist entries found
             for show_name, entries in current_waitlist_entries.items():
-                existing_waitlist_items_in_db = daily_updates_dynamo_db_connection.get_show_waitlist_entries_from_db(
-                    show_name
-                )
-                existing_waitlist_items_as_str = [
-                    str(s) for s in existing_waitlist_items_in_db
-                ]
-                if verbose:
-                    print(
-                        "Current waitlist items in db:\n"
-                        + ", ".join(existing_waitlist_items_as_str)
-                    )
-                    print(
-                        f"Newly found waitlist items:\n"
-                        + ", ".join([str(s) for s in entries])
-                    )
-
+                logger.info("Found %d waitlist entries for %s", len(entries), show_name)
                 daily_updates_dynamo_db_connection.update_waitlist_for_show(
                     show_name, entries
                 )
@@ -61,7 +46,7 @@ class LateNightShowBot:
             return current_waitlist_entries
 
         except Exception as e:
-            print(f"Error in check_late_night_ticket_site: {e}")
+            logger.error("Error scraping late night ticket site: %s", str(e), exc_info=True)
             raise e
         finally:
             web_scraper.close()

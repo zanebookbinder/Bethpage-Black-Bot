@@ -1,5 +1,8 @@
+import logging
 import boto3
 from daily_update_helpers.late_night_web_scraper import WaitlistEntry
+
+logger = logging.getLogger(__name__)
 
 DAILY_UPDATES_TABLE_NAME = "daily-updates-data"
 
@@ -9,7 +12,7 @@ class DailyUpdateDynamoDbConnection:
         self.daily_updates_table = self.dynamodb.Table(DAILY_UPDATES_TABLE_NAME)
 
     def update_waitlist_for_show(self, show_name, waitlist_items):
-        print(f"Updating waitlist entries for {show_name}")
+        logger.debug("Updating %d waitlist entries for %s", len(waitlist_items), show_name)
         current_item = self.get_show_object_from_db(show_name)
         waitlist_items_for_db = [item.to_dynamo_db_item() for item in waitlist_items]
         current_item["Waitlists"] = waitlist_items_for_db
@@ -20,16 +23,15 @@ class DailyUpdateDynamoDbConnection:
         """Store volunteering opportunities under the given org id.
         `opportunities` should be a list of dicts serializable to DynamoDB.
         """
-        print(f"Updating volunteering opportunities for {org_name}")
+        logger.debug("Updating %d volunteering opportunities for %s", len(opportunities), org_name)
         current_item = self.get_show_object_from_db(org_name)
-        # store under a different key to avoid colliding with Waitlists
         current_item["Volunteering Opportunities"] = opportunities
         self.daily_updates_table.put_item(Item=current_item)
 
     def get_show_object_from_db(self, show_name):
         response = self.daily_updates_table.get_item(Key={"id": show_name})
         if "Item" not in response:
-            print(f"No object with id={show_name} found... creating one")
+            logger.debug("No DynamoDB object found for %s, creating new one", show_name)
             return {"id": show_name}
 
         return response.get("Item")
@@ -37,7 +39,7 @@ class DailyUpdateDynamoDbConnection:
     def get_show_waitlist_entries_from_db(self, show_name):
         response = self.daily_updates_table.get_item(Key={"id": show_name})
         if "Item" not in response:
-            print(f"No object with id={show_name} found... returning empty list")
+            logger.debug("No waitlist entries found for %s", show_name)
             return []
 
         return [
@@ -48,7 +50,7 @@ class DailyUpdateDynamoDbConnection:
     def get_volunteering_for_org(self, org_name):
         response = self.daily_updates_table.get_item(Key={"id": org_name})
         if "Item" not in response:
-            print(f"No object with id={org_name} found... returning empty list")
+            logger.debug("No volunteering opportunities found for %s", org_name)
             return []
 
         item = response.get("Item")
