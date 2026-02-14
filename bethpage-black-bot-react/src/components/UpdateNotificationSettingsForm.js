@@ -14,6 +14,143 @@ import { convertTo12Hour, convertTo24Hour, isValidDate, formatDateToMD, formatMD
 import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
 import ToggleButtonPair from "./ToggleButtonPair";
 import { API_BASE_URL } from "../utils";
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
+
+// Custom MUI theme matching site colors
+const customTheme = createTheme({
+    palette: {
+        primary: {
+            main: '#283618', // dark green
+        },
+        secondary: {
+            main: '#bc6c25', // orange
+        },
+    },
+    components: {
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#fefae0',
+                        color: '#283618',
+                        fontFamily: 'Montserrat, sans-serif',
+                        '& fieldset': {
+                            borderColor: '#283618',
+                            borderWidth: '2px',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: '#283618',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: '#283618',
+                            borderWidth: '2px',
+                        },
+                    },
+                    '& .MuiInputLabel-root': {
+                        color: '#283618',
+                        fontFamily: 'Montserrat, sans-serif',
+                        '&.Mui-focused': {
+                            color: '#283618',
+                        },
+                    },
+                },
+            },
+        },
+        MuiIconButton: {
+            styleOverrides: {
+                root: {
+                    color: '#283618',
+                    '&:hover': {
+                        backgroundColor: 'rgba(40, 54, 24, 0.08)',
+                    },
+                },
+            },
+        },
+        MuiPickersDay: {
+            styleOverrides: {
+                root: {
+                    color: '#283618',
+                    '&.Mui-selected': {
+                        backgroundColor: '#bc6c25 !important',
+                        color: '#fefae0',
+                        '&:hover': {
+                            backgroundColor: '#8d480b !important',
+                        },
+                    },
+                    '&:hover': {
+                        backgroundColor: 'rgba(188, 108, 37, 0.2)',
+                    },
+                },
+            },
+        },
+        MuiClock: {
+            styleOverrides: {
+                pin: {
+                    backgroundColor: '#bc6c25',
+                },
+            },
+        },
+        MuiClockPointer: {
+            styleOverrides: {
+                root: {
+                    backgroundColor: '#bc6c25',
+                },
+                thumb: {
+                    backgroundColor: '#bc6c25',
+                    borderColor: '#bc6c25',
+                },
+            },
+        },
+        MuiClockNumber: {
+            styleOverrides: {
+                root: {
+                    color: '#283618',
+                    '&.Mui-selected': {
+                        backgroundColor: '#bc6c25',
+                        color: '#fefae0',
+                    },
+                },
+            },
+        },
+        MuiMultiSectionDigitalClock: {
+            styleOverrides: {
+                root: {
+                    '& .MuiMenuItem-root': {
+                        '&.Mui-selected': {
+                            backgroundColor: '#bc6c25 !important',
+                            color: '#fefae0',
+                            '&:hover': {
+                                backgroundColor: '#8d480b !important',
+                            },
+                        },
+                    },
+                },
+            },
+        },
+        MuiPickersCalendarHeader: {
+            styleOverrides: {
+                label: {
+                    color: '#283618',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: 600,
+                },
+            },
+        },
+        MuiDayCalendar: {
+            styleOverrides: {
+                weekDayLabel: {
+                    color: '#283618',
+                    fontFamily: 'Montserrat, sans-serif',
+                },
+            },
+        },
+    },
+});
 
 export default function UpdateNotificationSettingsForm({ email }) {
     const [loading, setLoading] = useState(true);
@@ -167,6 +304,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
         <View className="form">
             <Button onClick={() => (window.location.href = '/')} variation="primary" padding=".5rem" marginBottom="1rem">← Go Home</Button>
             <Heading level={3}>Update Notification Settings</Heading>
+            <Text fontSize="0.875rem" color="var(--dark-green-text-color)" marginBottom="0.5rem">for {email}</Text>
             <Text marginBottom="2rem">Select the days and times you're able to play!</Text>
 
             {notificationsCurrentlyEnabled != null &&
@@ -241,45 +379,94 @@ export default function UpdateNotificationSettingsForm({ email }) {
 
                     <View marginTop="1rem">
                         <Heading level={5}>Earliest Time</Heading>
-                        <TextField
-                            name="earliest_playable_time"
-                            type="time"
-                            width="fit-content"
-                            value={userSettings.earliest_playable_time}
-                            onChange={handleChange}
-                            required
-                            descriptiveText="What's the earliest time you'd want to play?"
-                            gap={"0.25rem"}
-
-                        />
+                        <Text fontSize="0.875rem" color="var(--dark-green-text-color)" marginBottom="0.5rem">
+                            What's the earliest time you'd want to play?
+                        </Text>
+                        <div style={{ maxWidth: '200px' }}>
+                            <ThemeProvider theme={customTheme}>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <TimePicker
+                                        value={userSettings.earliest_playable_time && userSettings.earliest_playable_time.includes(':')
+                                            ? dayjs(`2000-01-01 ${userSettings.earliest_playable_time}`)
+                                            : null}
+                                        onChange={(newValue) => {
+                                            if (newValue && newValue.isValid()) {
+                                                setUserSettings(prev => ({
+                                                    ...prev,
+                                                    earliest_playable_time: newValue.format('HH:mm')
+                                                }));
+                                            }
+                                        }}
+                                        slotProps={{
+                                            textField: {
+                                                size: 'small',
+                                                required: true,
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </ThemeProvider>
+                        </div>
                     </View>
 
                     <View marginTop="1rem">
                         <Heading level={5}>Season Start Date</Heading>
-                        <TextField
-                            name="start_date"
-                            type="date"
-                            width="fit-content"
-                            value={userSettings.start_date}
-                            onChange={handleChange}
-                            required
-                            descriptiveText="First day of the year you want to receive notifications (e.g., March 1)"
-                            gap={"0.25rem"}
-                        />
+                        <Text fontSize="0.875rem" color="var(--dark-green-text-color)" marginBottom="0.5rem">
+                            First day of the year you want to receive notifications (e.g., March 1)
+                        </Text>
+                        <div style={{ maxWidth: '200px' }}>
+                            <ThemeProvider theme={customTheme}>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        value={userSettings.start_date ? dayjs(userSettings.start_date) : null}
+                                        onChange={(newValue) => {
+                                            if (newValue) {
+                                                setUserSettings(prev => ({
+                                                    ...prev,
+                                                    start_date: newValue.format('YYYY-MM-DD')
+                                                }));
+                                            }
+                                        }}
+                                        slotProps={{
+                                            textField: {
+                                                size: 'small',
+                                                required: true,
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </ThemeProvider>
+                        </div>
                     </View>
 
                     <View marginTop="1rem">
                         <Heading level={5}>Season End Date</Heading>
-                        <TextField
-                            name="end_date"
-                            type="date"
-                            width="fit-content"
-                            value={userSettings.end_date}
-                            onChange={handleChange}
-                            required
-                            descriptiveText="Last day of the year you want to receive notifications (e.g., November 30)"
-                            gap={"0.25rem"}
-                        />
+                        <Text fontSize="0.875rem" color="var(--dark-green-text-color)" marginBottom="0.5rem">
+                            Last day of the year you want to receive notifications (e.g., November 30)
+                        </Text>
+                        <div style={{ maxWidth: '200px' }}>
+                            <ThemeProvider theme={customTheme}>
+                                <LocalizationProvider dateAdapter={AdapterDayjs}>
+                                    <DatePicker
+                                        value={userSettings.end_date ? dayjs(userSettings.end_date) : null}
+                                        onChange={(newValue) => {
+                                            if (newValue) {
+                                                setUserSettings(prev => ({
+                                                    ...prev,
+                                                    end_date: newValue.format('YYYY-MM-DD')
+                                                }));
+                                            }
+                                        }}
+                                        slotProps={{
+                                            textField: {
+                                                size: 'small',
+                                                required: true,
+                                            },
+                                        }}
+                                    />
+                                </LocalizationProvider>
+                            </ThemeProvider>
+                        </div>
                     </View>
 
                     <View marginTop="1rem">

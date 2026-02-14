@@ -70,11 +70,13 @@ export default function CurrentTeeTimes() {
                         </Flex>
                     </View>
 
-                    <Flex
-                        marginTop="1.5rem"
-                        direction="row"
-                        wrap="wrap"
-                        gap="1rem"
+                    <div
+                        style={{
+                            marginTop: '1.5rem',
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gap: '1rem',
+                        }}
                     >
                         {recentTeeTimes.map((teeTime, index) => (
                             <CurrentTeeTime
@@ -84,7 +86,7 @@ export default function CurrentTeeTimes() {
                                 players={teeTime.Players}
                             />
                         ))}
-                    </Flex>
+                    </div>
                 </View>
             ) : (
                 <View>
