@@ -1,6 +1,98 @@
 import { Button, TextField, View, Heading } from '@aws-amplify/ui-react';
 import { useState } from 'react';
 import { isValidDateWithinOneYear } from '../utils';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDayjs } from '@mui/x-date-pickers/AdapterDayjs';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import dayjs from 'dayjs';
+
+// Custom MUI theme matching site colors
+const customTheme = createTheme({
+    palette: {
+        primary: {
+            main: '#283618', // dark green
+        },
+        secondary: {
+            main: '#bc6c25', // orange
+        },
+    },
+    components: {
+        MuiTextField: {
+            styleOverrides: {
+                root: {
+                    '& .MuiOutlinedInput-root': {
+                        backgroundColor: '#fefae0',
+                        color: '#283618',
+                        fontFamily: 'Montserrat, sans-serif',
+                        '& fieldset': {
+                            borderColor: '#283618',
+                            borderWidth: '2px',
+                        },
+                        '&:hover fieldset': {
+                            borderColor: '#283618',
+                        },
+                        '&.Mui-focused fieldset': {
+                            borderColor: '#283618',
+                            borderWidth: '2px',
+                        },
+                    },
+                    '& .MuiInputLabel-root': {
+                        color: '#283618',
+                        fontFamily: 'Montserrat, sans-serif',
+                        '&.Mui-focused': {
+                            color: '#283618',
+                        },
+                    },
+                },
+            },
+        },
+        MuiIconButton: {
+            styleOverrides: {
+                root: {
+                    color: '#283618',
+                    '&:hover': {
+                        backgroundColor: 'rgba(40, 54, 24, 0.08)',
+                    },
+                },
+            },
+        },
+        MuiPickersDay: {
+            styleOverrides: {
+                root: {
+                    color: '#283618',
+                    '&.Mui-selected': {
+                        backgroundColor: '#bc6c25 !important',
+                        color: '#fefae0',
+                        '&:hover': {
+                            backgroundColor: '#8d480b !important',
+                        },
+                    },
+                    '&:hover': {
+                        backgroundColor: 'rgba(188, 108, 37, 0.2)',
+                    },
+                },
+            },
+        },
+        MuiPickersCalendarHeader: {
+            styleOverrides: {
+                label: {
+                    color: '#283618',
+                    fontFamily: 'Montserrat, sans-serif',
+                    fontWeight: 600,
+                },
+            },
+        },
+        MuiDayCalendar: {
+            styleOverrides: {
+                weekDayLabel: {
+                    color: '#283618',
+                    fontFamily: 'Montserrat, sans-serif',
+                },
+            },
+        },
+    },
+});
 
 export default function ExtraPlayableDaysInput({ formData, setFormData, onErrorsChange }) {
   const dates = (formData?.extra_playable_days || ['']).map(d => {
@@ -51,19 +143,26 @@ export default function ExtraPlayableDaysInput({ formData, setFormData, onErrors
     />
       {dates.map((date, i) => (
         <div key={i} style={{ display: 'flex', alignItems: 'center', marginBottom: "1rem" }}>
-          <input
-            type="date"
-            value={date}
-            onChange={(e) => updateDate(i, e.target.value)}
-            style={{
-              padding: '8px 12px',
-              borderRadius: '6px',
-              border: '1px solid #89949f',
-              marginRight: '8px',
-              fontSize: '1rem',
-              minWidth: '180px',
-            }}
-          />
+          <ThemeProvider theme={customTheme}>
+            <LocalizationProvider dateAdapter={AdapterDayjs}>
+              <DatePicker
+                value={date ? dayjs(date) : null}
+                onChange={(newValue) => {
+                  if (newValue && newValue.isValid()) {
+                    updateDate(i, newValue.format('YYYY-MM-DD'));
+                  } else if (!newValue) {
+                    updateDate(i, '');
+                  }
+                }}
+                slotProps={{
+                  textField: {
+                    size: 'small',
+                  },
+                }}
+                sx={{ marginRight: '8px' }}
+              />
+            </LocalizationProvider>
+          </ThemeProvider>
           <Button
             variation="link"
             onClick={() => removeDate(i)}

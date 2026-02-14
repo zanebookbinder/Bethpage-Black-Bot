@@ -109,7 +109,7 @@ a {
   border-color: var(--orange-button-color) !important;
 }
 
-/* Keep primary buttons orange on hover, focus, and active states */
+/* Primary button - all states should stay orange */
 .amplify-button--primary:hover,
 .amplify-button--primary:focus,
 .amplify-button--primary:active,
@@ -119,16 +119,93 @@ a {
   color: var(--white-button-text-color) !important;
   outline: none !important;
   box-shadow: none !important;
-  -webkit-tap-highlight-color: transparent !important;
 }
 
-/* Remove dark outline when holding down button */
-.amplify-button--primary:active {
+/* Remove ALL blue focus/active styling from buttons */
+.amplify-button:focus,
+.amplify-button:focus-visible,
+.amplify-button:active,
+button:focus,
+button:focus-visible,
+button:active {
   outline: none !important;
   box-shadow: none !important;
 }
 
-/* Style date and time inputs to match the theme - use more specific selectors */
+/* Remove ALL blue focus/active styling from checkboxes - ULTRA comprehensive */
+/* Target every possible element and state */
+.amplify-checkboxfield,
+.amplify-checkboxfield *,
+.amplify-checkboxfield:focus,
+.amplify-checkboxfield:focus-visible,
+.amplify-checkboxfield:active,
+.amplify-checkboxfield:focus-within,
+.amplify-checkboxfield > *,
+.amplify-checkboxfield > * > *,
+.amplify-checkbox,
+.amplify-checkbox *,
+.amplify-checkbox:focus,
+.amplify-checkbox:focus-visible,
+.amplify-checkbox:active,
+.amplify-checkbox:focus-within,
+.amplify-checkbox > *,
+.amplify-checkbox__button,
+.amplify-checkbox__button:focus,
+.amplify-checkbox__button:focus-visible,
+.amplify-checkbox__button:active,
+.amplify-checkbox__input,
+.amplify-checkbox__input:focus,
+.amplify-checkbox__input:focus-visible,
+.amplify-checkbox__input:active,
+.amplify-checkbox__icon,
+.amplify-checkbox__icon:focus,
+.amplify-checkbox__icon:focus-visible,
+.amplify-checkbox__icon:active,
+.amplify-checkbox__label,
+.amplify-checkbox__label:focus,
+.amplify-checkbox__label:focus-visible,
+.amplify-checkboxfield__label,
+.amplify-checkboxfield__label:focus,
+input[type="checkbox"],
+input[type="checkbox"]:focus,
+input[type="checkbox"]:focus-visible,
+input[type="checkbox"]:active {
+  outline: 0 !important;
+  outline-width: 0 !important;
+  outline-style: none !important;
+  outline-color: transparent !important;
+  box-shadow: none !important;
+  border-color: var(--dark-green-text-color) !important;
+  -webkit-appearance: none !important;
+  -moz-appearance: none !important;
+}
+
+/* Checkbox checked state - keep it orange, NO CHANGE on focus */
+.amplify-checkbox__input:checked,
+.amplify-checkbox__input:checked:focus,
+.amplify-checkbox__input:checked:focus-visible,
+.amplify-checkbox__input:checked:active,
+.amplify-checkbox__icon:checked,
+input[type="checkbox"]:checked,
+input[type="checkbox"]:checked:focus,
+input[type="checkbox"]:checked:focus-visible,
+input[type="checkbox"]:checked:active {
+  background-color: var(--orange-button-color) !important;
+  outline: 0 !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+  border-color: var(--orange-button-color) !important;
+}
+
+/* Force remove focus ring from all checkbox wrapper elements */
+.amplify-checkboxfield:focus-within *,
+.amplify-checkbox:focus-within * {
+  outline: 0 !important;
+  outline-width: 0 !important;
+  box-shadow: none !important;
+}
+
+/* Date and time inputs - NO border change on focus */
 input[type="date"],
 input[type="time"],
 .amplify-input[type="date"],
@@ -139,10 +216,28 @@ input[type="time"],
   color: var(--dark-green-text-color) !important;
   background-color: #fefae0 !important;
   border: 2px solid var(--dark-green-text-color) !important;
+  border-width: 2px !important;
   border-radius: 6px !important;
   padding: 10px 12px !important;
   font-size: 1rem !important;
   font-weight: 500 !important;
+}
+
+/* NO changes to border on focus/hover/active */
+input[type="date"]:focus,
+input[type="time"]:focus,
+input[type="date"]:focus-visible,
+input[type="time"]:focus-visible,
+input[type="date"]:active,
+input[type="time"]:active,
+input[type="date"]:hover,
+input[type="time"]:hover,
+.amplify-input[type="date"]:focus,
+.amplify-input[type="time"]:focus,
+.amplify-field input[type="date"]:focus,
+.amplify-field input[type="time"]:focus {
+  outline: none !important;
+  box-shadow: none !important;
 }
 
 /* Style the calendar/clock picker icons */
@@ -150,26 +245,6 @@ input[type="date"]::-webkit-calendar-picker-indicator,
 input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(23%) sepia(18%) saturate(1654%) hue-rotate(60deg) brightness(91%) contrast(94%) !important;
   cursor: pointer !important;
-}
-
-input[type="date"]:focus,
-input[type="time"]:focus,
-.amplify-input[type="date"]:focus,
-.amplify-input[type="time"]:focus,
-.amplify-field input[type="date"]:focus,
-.amplify-field input[type="time"]:focus {
-  outline: none !important;
-  border-color: var(--orange-button-color) !important;
-  box-shadow: 0 0 0 3px rgba(188, 108, 37, 0.25) !important;
-}
-
-input[type="date"]:hover,
-input[type="time"]:hover,
-.amplify-input[type="date"]:hover,
-.amplify-input[type="time"]:hover,
-.amplify-field input[type="date"]:hover,
-.amplify-field input[type="time"]:hover {
-  border-color: var(--orange-button-color) !important;
 }
 
 .form > button {
@@ -236,6 +311,11 @@ input[type="time"]:hover,
 
   h4 {
     font-size: 1.15rem !important;
+  }
+
+  /* Single column on mobile */
+  .tee-times-grid {
+    grid-template-columns: 1fr !important;
   }
 
 }
