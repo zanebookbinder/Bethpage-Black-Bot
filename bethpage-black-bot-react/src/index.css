@@ -102,7 +102,7 @@ a {
   width: fit-content;
 }
 
-/* Non-primary button hover states */
+/* Hover state for non-primary buttons (outline, link, etc.) */
 .amplify-button:not(.amplify-button--primary):hover {
   background-color: transparent !important;
   color: var(--orange-button-color) !important;
