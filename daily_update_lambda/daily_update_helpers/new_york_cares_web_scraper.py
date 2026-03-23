@@ -59,20 +59,19 @@ class NewYorkCaresWebScraper:
                             data = None
 
                     if data:
-                        title = data.get("Web_Title_FF__c") or data.get("Name")
-                        date = data.get("StartDate")
-                        start_time = data.get("Activity_Start_Time__c")
-                        end_time = data.get("Activity_End_Time__c")
+                        title = data.get("Public_Session_Name__c") or data.get("Name")
+                        date = data.get("Session_Start_Date__c")
+                        start_time = data.get("Session_Start_Time_Formatted__c")
+                        end_time = data.get("Session_End_Time_Formatted__c")
                         if start_time and end_time:
-                            time_str = f"{self.format_time(start_time)} - {self.format_time(end_time)}"
+                            time_str = f"{start_time} - {end_time}"
                         else:
                             time_str = start_time or end_time
                         location = (
-                            data.get("Website_Address__c")
-                            or data.get("SiteAddress__tl")
-                            or (data.get("Site__r") or {}).get("Name")
+                            data.get("Address__c")
+                            or data.get("Location_Address__tl")
                         )
-                        description = data.get("Project_Description__c")
+                        description = data.get("Description__c")
                     else:
                         # fallback to visible elements
                         try:
@@ -87,14 +86,8 @@ class NewYorkCaresWebScraper:
 
                     is_full = False
                     if data:
-                        # JSON flags from the sample
-                        if data.get("Full_Capacity_Boolean__c") is True:
-                            is_full = True
-                        elif str(data.get("Full_Capacity__c", "")).strip().lower() in (
-                            "yes",
-                            "true",
-                            "y",
-                        ):
+                        capacity = data.get("Capacity_Remaining__c")
+                        if capacity is not None and int(capacity) <= 0:
                             is_full = True
 
                     if not is_full:
