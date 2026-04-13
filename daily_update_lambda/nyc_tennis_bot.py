@@ -12,7 +12,9 @@ class NycTennisBot:
     def scrape_data_and_return_email_html(self):
         logger.info("Checking NYC tennis reservation page")
         try:
-            headers = {"User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"}
+            headers = {
+                "User-Agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36"
+            }
             response = requests.get(NYC_TENNIS_URL, headers=headers, timeout=15)
             response.raise_for_status()
             soup = BeautifulSoup(response.content, "html.parser")
