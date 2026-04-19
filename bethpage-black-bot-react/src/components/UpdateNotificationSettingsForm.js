@@ -164,6 +164,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
         notifications_enabled: false,
         start_date: formatMDToDate("3/1"),  // Default: March 1
         end_date: formatMDToDate("11/30"),  // Default: November 30
+        in_state_golfer: true,
     });
     const [notificationsCurrentlyEnabled, setNotificationsCurrentlyEnabled] =
         useState(null);
@@ -205,6 +206,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
                     notifications_enabled: data.notifications_enabled,
                     start_date: formatMDToDate(data.start_date || "3/1"),
                     end_date: formatMDToDate(data.end_date || "11/30"),
+                    in_state_golfer: data.in_state_golfer ?? true,
                 });
                 setNotificationsCurrentlyEnabled(data.notifications_enabled);
             } else {
@@ -260,6 +262,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
             notifications_enabled: userSettings.notifications_enabled,
             start_date: formatDateToMD(userSettings.start_date),
             end_date: formatDateToMD(userSettings.end_date),
+            in_state_golfer: userSettings.in_state_golfer,
             email: email,
         };
 
@@ -291,6 +294,13 @@ export default function UpdateNotificationSettingsForm({ email }) {
         setUserSettings((prev) => ({
             ...prev,
             include_holidays: includeHolidays,
+        }));
+    };
+
+    const setInStateGolfer = (inState) => {
+        setUserSettings((prev) => ({
+            ...prev,
+            in_state_golfer: inState,
         }));
     };
 
@@ -484,6 +494,24 @@ export default function UpdateNotificationSettingsForm({ email }) {
                             onToggle={(value) => setIncludeHolidays(value)}
                             leftButtonText="Yup!"
                             rightButtonText="Nope"
+                        />
+                    </View>
+
+                    <View marginTop="1rem">
+                        <Heading level={5}>
+                            In-State Golfer?
+                        </Heading>
+                        <TextField
+                            width="fit-content"
+                            descriptiveText="Are you a verified NY State resident? In-state golfers can book tee times further in advance."
+                            inputStyles={{ display: 'none' }}
+                            gap={"0.25rem"}
+                        />
+                        <ToggleButtonPair
+                            start={userSettings.in_state_golfer}
+                            onToggle={(value) => setInStateGolfer(value)}
+                            leftButtonText="Yes, in-state"
+                            rightButtonText="No, out-of-state"
                         />
                     </View>
 

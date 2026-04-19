@@ -74,7 +74,7 @@ export default function CurrentTeeTimes() {
                         style={{
                             marginTop: '1.5rem',
                             display: 'grid',
-                            gridTemplateColumns: 'repeat(2, 1fr)',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
                             gap: '1rem',
                         }}
                     >

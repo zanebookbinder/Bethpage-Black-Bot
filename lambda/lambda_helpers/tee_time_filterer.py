@@ -58,12 +58,15 @@ class TeeTimeFilterer:
 
             has_18_holes = tee_time["Holes"] == 18 or tee_time["Holes"] == "18"
 
+            is_within_in_state_booking_window = self.is_within_in_state_booking_window(user_config, date_obj)
+
             if (
                 is_in_date_range
                 and is_playable_day
                 and is_acceptable_time
                 and hits_min_players
                 and has_18_holes
+                and is_within_in_state_booking_window
             ):
                 filtered_tee_times.append(tee_time)
 
@@ -138,6 +141,17 @@ class TeeTimeFilterer:
         except (ValueError, AttributeError, IndexError):
             # If parsing fails, default to allowing the date
             return True
+
+    def is_within_in_state_booking_window(self, user_config, date_obj):
+        """
+        Out-of-state golfers may only book tee times up to 5 days in advance.
+        In-state (NY resident) golfers have no such restriction.
+        e.g. today=4/18 → out-of-state can book through 4/23, not 4/24+.
+        """
+        if user_config.in_state_golfer:
+            return True
+        today = datetime.now().date()
+        return date_obj <= today + timedelta(days=5)
 
     def get_user_config_as_object(self, user_email):
         config_data = self.db_table.get_user_config(user_email)
