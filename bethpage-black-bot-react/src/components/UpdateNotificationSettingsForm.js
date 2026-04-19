@@ -11,7 +11,7 @@ import {
     Loader,
 } from "@aws-amplify/ui-react";
 import { convertTo12Hour, convertTo24Hour, isValidDate, formatDateToMD, formatMDToDate } from "../utils";
-import ExtraPlayableDaysInput from "./ExtraPlayableDaysInput";
+import CustomDateInput from "./CustomDateInput";
 import ToggleButtonPair from "./ToggleButtonPair";
 import { API_BASE_URL } from "../utils";
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
@@ -165,6 +165,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
         start_date: formatMDToDate("3/1"),  // Default: March 1
         end_date: formatMDToDate("11/30"),  // Default: November 30
         in_state_golfer: true,
+        blackout_dates: [],
     });
     const [notificationsCurrentlyEnabled, setNotificationsCurrentlyEnabled] =
         useState(null);
@@ -207,6 +208,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
                     start_date: formatMDToDate(data.start_date || "3/1"),
                     end_date: formatMDToDate(data.end_date || "11/30"),
                     in_state_golfer: data.in_state_golfer ?? true,
+                    blackout_dates: data.blackout_dates || [],
                 });
                 setNotificationsCurrentlyEnabled(data.notifications_enabled);
             } else {
@@ -263,6 +265,9 @@ export default function UpdateNotificationSettingsForm({ email }) {
             start_date: formatDateToMD(userSettings.start_date),
             end_date: formatDateToMD(userSettings.end_date),
             in_state_golfer: userSettings.in_state_golfer,
+            blackout_dates: userSettings.blackout_dates
+                .map((d) => d.trim())
+                .filter((d) => d.length > 0 && isValidDate(d)),
             email: email,
         };
 
@@ -515,10 +520,19 @@ export default function UpdateNotificationSettingsForm({ email }) {
                         />
                     </View>
 
-                    <ExtraPlayableDaysInput
+                    <CustomDateInput
                         formData={userSettings}
                         setFormData={setUserSettings}
                         onErrorsChange={setErrors}
+                    />
+
+                    <CustomDateInput
+                        formData={userSettings}
+                        setFormData={setUserSettings}
+                        onErrorsChange={setErrors}
+                        field="blackout_dates"
+                        heading="Blackout Dates"
+                        description="Specific dates you can't play — these will be excluded even if they match your other settings."
                     />
 
                     <View marginTop="1rem">

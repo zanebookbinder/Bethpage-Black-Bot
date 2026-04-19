@@ -10,27 +10,24 @@ CONFIG_TABLE_NAME = "bethpage-black-bot-config"
 CONFIG_TABLE_ALL_EMAILS_ID = "all-emails"
 LATEST_TEE_TIMES_OBJECT_ID = "latest-tee-times"
 ALL_TEE_TIMES_OBJECT_ID = "all_tee_times"
-FILTERED_TEE_TIMES_OBJECT_ID = "filtered_tee_times"
-
+AVAILABLE_TIMES_BY_DAY_ID = "available-times-by-day"
+AVAILABLE_TIMES_RESET_DATE_KEY = "last_reset_date"
 class DynamoDBConnection:
     def __init__(self):
         self.dynamodb = boto3.resource("dynamodb")
         self.table = self.dynamodb.Table(TEE_TIMES_TABLE_NAME)
         self.config_table = self.dynamodb.Table(CONFIG_TABLE_NAME)
 
-    def publish_teetimes(self, all_tee_times, filtered_tee_times):
+    def publish_teetimes(self, all_tee_times):
         item = {
             "id": datetime.now().isoformat(),
             ALL_TEE_TIMES_OBJECT_ID: all_tee_times,
-            FILTERED_TEE_TIMES_OBJECT_ID: filtered_tee_times,
         }
         self.table.put_item(Item=item)
 
-        # Update the "latest-tee-times" item with the same data (except id)
         latest_item = {
             "id": LATEST_TEE_TIMES_OBJECT_ID,
             ALL_TEE_TIMES_OBJECT_ID: all_tee_times,
-            FILTERED_TEE_TIMES_OBJECT_ID: filtered_tee_times,
         }
         self.table.put_item(Item=latest_item)
         return item["id"]
@@ -42,13 +39,28 @@ class DynamoDBConnection:
             return None
         return response.get('Item')
 
-    def get_latest_filtered_tee_times(self):
-        filtered_tee_times = self.get_latest_tee_times_object()[FILTERED_TEE_TIMES_OBJECT_ID]
-        return filtered_tee_times
-
     def get_latest_tee_times_all(self):
         all_tee_times = self.get_latest_tee_times_object()[ALL_TEE_TIMES_OBJECT_ID]
         return all_tee_times
+
+    def get_available_times_by_day(self):
+        """Returns {tee_time_date: [tee_times]} for today. Resets if it's a new day."""
+        today = datetime.now().date().isoformat()
+        response = self.table.get_item(Key={"id": AVAILABLE_TIMES_BY_DAY_ID})
+        item = response.get("Item")
+        if not item or item.get(AVAILABLE_TIMES_RESET_DATE_KEY) != today:
+            logger.info("Resetting available-times-by-day for new day")
+            return {}
+        return {k: v for k, v in item.items() if k not in ("id", AVAILABLE_TIMES_RESET_DATE_KEY)}
+
+    def update_available_times_by_day(self, times_by_day):
+        today = datetime.now().date().isoformat()
+        item = {
+            "id": AVAILABLE_TIMES_BY_DAY_ID,
+            AVAILABLE_TIMES_RESET_DATE_KEY: today,
+            **times_by_day,
+        }
+        self.table.put_item(Item=item)
 
     def get_all_emails_list(self):
         response = self.config_table.get_item(Key = {'id': CONFIG_TABLE_ALL_EMAILS_ID})

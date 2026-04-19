@@ -33,7 +33,7 @@ class EmailSender:
 
     BOOKING_URL = "https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes"
 
-    def send_email(self, email, new_times):
+    def send_email(self, email, new_times, pause_guid=None):
         logger.info(
             "Sending tee time notification to %s with %d new times",
             email,
@@ -74,9 +74,21 @@ class EmailSender:
                 row += "</tr>"
                 html_lines.append(row)
 
+        pause_footer = ""
+        if pause_guid:
+            pause_url = f"{FRONTEND_URL}/updateSettings/{pause_guid}"
+            pause_footer = (
+                f"<hr style='margin-top:2rem; border:none; border-top:1px solid #ddd;'/>"
+                f"<p style='font-size:0.85em; color:#666;'>"
+                f"<a href='{pause_url}'>Pause notifications</a>"
+                f"To resume later, visit <a href='{FRONTEND_URL}'>{FRONTEND_URL}</a>, "
+                f"</p>"
+            )
+
         html_lines += [
             "</tbody></table>",
             f"<p><a href='{self.BOOKING_URL}' target='_blank'>Book on Bethpage</a></p>",
+            pause_footer,
             "</body></html>",
         ]
         body_html = "".join(html_lines)

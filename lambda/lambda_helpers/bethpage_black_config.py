@@ -12,6 +12,7 @@ class BethpageBlackBotConfig:
         self.start_date = "3/1"  # Default: March 1st (format: M/D)
         self.end_date = "11/30"  # Default: November 30th (format: M/D)
         self.in_state_golfer = True  # NY residents can book further in advance than out-of-state
+        self.blackout_dates = []  # YYYY-MM-DD dates to always exclude
 
         if config:
             self.earliest_playable_time = str(config.get('earliest_playable_time', self.earliest_playable_time))
@@ -25,6 +26,7 @@ class BethpageBlackBotConfig:
             self.start_date = str(config.get('start_date', self.start_date))
             self.end_date = str(config.get('end_date', self.end_date))
             self.in_state_golfer = bool(config.get('in_state_golfer', self.in_state_golfer))
+            self.blackout_dates = list(config.get('blackout_dates', self.blackout_dates))
 
     def config_to_dynamodb_item(self, id="config"):
         return {
@@ -39,6 +41,7 @@ class BethpageBlackBotConfig:
             "start_date": self.start_date,
             "end_date": self.end_date,
             "in_state_golfer": self.in_state_golfer,
+            "blackout_dates": self.blackout_dates,
         }
     
     def convert_decimal(self, value):

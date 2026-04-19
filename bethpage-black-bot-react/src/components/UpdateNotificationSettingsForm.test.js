@@ -46,8 +46,8 @@ jest.mock('../utils', () => ({
   })
 }));
 
-jest.mock('./ExtraPlayableDaysInput', () => {
-  return function MockExtraPlayableDaysInput() {
+jest.mock('./CustomDateInput', () => {
+  return function MockCustomDateInput() {
     return <div data-testid="extra-playable-days-input">Extra Playable Days</div>;
   };
 });

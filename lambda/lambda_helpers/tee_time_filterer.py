@@ -60,6 +60,8 @@ class TeeTimeFilterer:
 
             is_within_in_state_booking_window = self.is_within_in_state_booking_window(user_config, date_obj)
 
+            is_not_blacked_out = self.is_not_blacked_out(user_config, date_obj)
+
             if (
                 is_in_date_range
                 and is_playable_day
@@ -67,6 +69,7 @@ class TeeTimeFilterer:
                 and hits_min_players
                 and has_18_holes
                 and is_within_in_state_booking_window
+                and is_not_blacked_out
             ):
                 filtered_tee_times.append(tee_time)
 
@@ -141,6 +144,11 @@ class TeeTimeFilterer:
         except (ValueError, AttributeError, IndexError):
             # If parsing fails, default to allowing the date
             return True
+
+    def is_not_blacked_out(self, user_config, date_obj):
+        """Return False if date_obj falls on a user-configured blackout date (YYYY-MM-DD)."""
+        formatted = date_obj.strftime("%Y-%m-%d")
+        return formatted not in user_config.blackout_dates
 
     def is_within_in_state_booking_window(self, user_config, date_obj):
         """

@@ -88,18 +88,20 @@ class ApiGatewayHandler:
 
             # VALIDATES THAT A ONE TIME LINK EXISTS AND RETURNS THE USER
             elif method == "POST" and path == "/validateOneTimeLink":
-                success, emailOrErrorMessage = self.validate_one_time_link(event)
+                success, emailOrErrorMessage, is_pause = self.validate_one_time_link(event)
 
                 if success:
                     response_body = {
                         "message": "Retrieved valid one time link",
                         "email": emailOrErrorMessage,
+                        "pause": is_pause,
                         "errorMessage": "",
                     }
                 else:
                     response_body = {
                         "message": "Invalid one time link",
                         "email": "",
+                        "pause": False,
                         "errorMessage": emailOrErrorMessage,
                     }
 
@@ -182,7 +184,7 @@ class ApiGatewayHandler:
         post_request_body = json.loads(event.get("body", "{}"))
         guid_in_browser = post_request_body["guid"]
 
-        is_link_valid, emailOrErrorMessage = (
+        is_link_valid, emailOrErrorMessage, is_pause = (
             self.otlh.validate_one_time_link_and_get_email(guid_in_browser)
         )
         if is_link_valid:
@@ -190,7 +192,7 @@ class ApiGatewayHandler:
         else:
             logger.warning("One-time link validation failed: %s", emailOrErrorMessage)
 
-        return is_link_valid, emailOrErrorMessage
+        return is_link_valid, emailOrErrorMessage, is_pause
 
     def format_api_response(self, body, status_code):
         if not isinstance(body, str):
