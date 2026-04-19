@@ -36,3 +36,8 @@ class SecretHandler:
     def get_one_time_link_sender_email(cls):
         secret = cls._get_secret("bethpage-sender-email-secret")
         return secret.get("one_time_link_email")
+
+    @classmethod
+    def get_admin_notify_email(cls):
+        secret = cls._get_secret("bethpage-sender-email-secret")
+        return secret.get("admin_notify_email")

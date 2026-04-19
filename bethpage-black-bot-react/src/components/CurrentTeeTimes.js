@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import { CurrentTeeTime } from "./CurrentTeeTime";
-import { View, Heading, Text, Link, Flex, Button } from "@aws-amplify/ui-react";
+import { View, Heading, Text, Link, Flex, Button, Loader } from "@aws-amplify/ui-react";
 import { API_BASE_URL } from "../utils";
 
 export default function CurrentTeeTimes() {
     const useDummyData = false;
     const [recentTeeTimes, setRecentTeeTimes] = useState([]);
+    const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         if (useDummyData) {
@@ -34,7 +35,12 @@ export default function CurrentTeeTimes() {
         const res = await fetch(`${API_BASE_URL}/getRecentTimes`);
         const data = await res.json();
         setRecentTeeTimes(data["result"]);
+        setLoading(false);
     };
+
+    if (loading) {
+        return <Loader variation="linear" padding="2rem" filledColor="#bc6c25" />;
+    }
 
     return (
         <View>

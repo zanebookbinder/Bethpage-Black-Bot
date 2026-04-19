@@ -5,7 +5,7 @@ import {
     Loader,
     Link,
     Heading,
-    Flex,
+    View,
     Text,
     Button,
 } from "@aws-amplify/ui-react";
@@ -76,28 +76,25 @@ export default function OneTimeLinkValidator() {
 
     if (errorMessage) {
         return (
-            <Flex direction="column" padding="2rem" maxWidth="40rem" margin="auto" alignItems="center">
-                <Alert borderRadius={10} variation="error">{errorMessage}</Alert>
-                <Link href="/"><Heading level={5}>Click here to go home</Heading></Link>
-            </Flex>
+            <View className="form">
+                <Alert borderRadius={10} variation="error" marginBottom="1rem">{errorMessage}</Alert>
+                <Button variation="primary" onClick={() => (window.location.href = "/")}>← Go Home</Button>
+            </View>
         );
     }
 
     if (paused) {
         return (
-            <Flex direction="column" padding="2rem" maxWidth="40rem" margin="auto" gap="1rem">
-                <Heading level={3} color="var(--dark-green-text-color)">
-                    Notifications paused
-                </Heading>
-                <Text>
+            <View className="form">
+                <Button variation="primary" padding=".5rem" marginBottom="1rem" onClick={() => (window.location.href = "/")}>← Go Home</Button>
+                <Heading level={3}>Notifications paused</Heading>
+                <Text marginBottom="1rem">
                     You won't receive any more Bethpage Black Bot emails until you turn
                     notifications back on.
                 </Text>
-                <Heading level={5} color="var(--dark-green-text-color)" marginTop="1rem">
-                    Want to resume?
-                </Heading>
+                <Heading level={5} marginBottom="0.5rem">Want to resume?</Heading>
                 <Text>
-                    1. Go to <Link href="/">bethpage-black-bot.com</Link>
+                    1. Go to <Link href="/" color="var(--orange-button-color)">bethpage-black-bot.com</Link>
                     <br />
                     2. Click <strong>Get a one-time link</strong> and enter your email
                     <br />
@@ -105,13 +102,7 @@ export default function OneTimeLinkValidator() {
                     <br />
                     4. Turn <strong>Notifications</strong> back on and save
                 </Text>
-                <Button
-                    variation="primary"
-                    onClick={() => (window.location.href = "/")}
-                >
-                    Go to homepage
-                </Button>
-            </Flex>
+            </View>
         );
     }
 

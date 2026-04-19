@@ -29,6 +29,7 @@ class EmailSender:
     def __init__(self):
         self.admin_email = SecretHandler.get_sender_email()
         self.one_time_link_email = SecretHandler.get_one_time_link_sender_email()
+        self.admin_notify_email = SecretHandler.get_admin_notify_email()
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     BOOKING_URL = "https://foreupsoftware.com/index.php/booking/19765/2431#/teetimes"
@@ -104,11 +105,11 @@ class EmailSender:
         )
 
     def send_user_update_to_admin_email(
-        self, new_user_email, config_dict, is_new_account=True
+        self, user_email, config_dict, is_new_account=True
     ):
         logger.info(
             "Sending admin notification for %s (new_account=%s)",
-            new_user_email,
+            user_email,
             is_new_account,
         )
 
@@ -134,6 +135,8 @@ class EmailSender:
             value = config_dict.get(key, "—")
             if isinstance(value, list):
                 value = ", ".join(str(v) for v in value) if value else "(none)"
+            if key == "email":
+                value = user_email
             rows += (
                 f"<tr>"
                 f"<td style='{cell_style}'><strong>{label}</strong></td>"
@@ -143,7 +146,6 @@ class EmailSender:
 
         if is_new_account:
             subject = "[BBB] New Sign-Up"
-            heading = "[BBB] New Sign-Up"
             description = (
                 "A new person has signed up for Bethpage Black Bot notifications."
             )
@@ -152,13 +154,11 @@ class EmailSender:
             )
         else:
             subject = "[BBB] Settings Updated"
-            heading = "[BBB] Settings Updated"
-            description = f"{new_user_email} has updated their Bethpage Black Bot notification settings."
+            description = f"{user_email} has updated their Bethpage Black Bot notification settings."
             config_note = "The below values are their new configuration settings:"
 
         body_html = f"""
         <html><body style="font-family: Arial, sans-serif;">
-        <h2>{heading}</h2>
         <p>{description}</p>
         <p>{config_note}</p>
         <table style="border-collapse: collapse; width: auto;">
@@ -175,7 +175,7 @@ class EmailSender:
 
         self.ses.send_email(
             Source=self.admin_email,
-            Destination={"ToAddresses": [self.admin_email]},
+            Destination={"ToAddresses": [self.admin_notify_email]},
             Message={
                 "Subject": {"Data": subject},
                 "Body": {"Html": {"Data": body_html}},
