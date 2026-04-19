@@ -2,6 +2,7 @@ import logging
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
 from lambda_helpers.email_sender import EmailSender
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
+from lambda_helpers.bethpage_black_config import BethpageBlackBotConfig
 from decimal import Decimal
 import json
 import traceback
@@ -108,10 +109,21 @@ class ApiGatewayHandler:
                 status_code = 404
 
             elapsed_time = time.time() - start_time
-            logger.info("API response: %s %s (%.2fs) - status %d", method, path, elapsed_time, status_code)
+            logger.info(
+                "API response: %s %s (%.2fs) - status %d",
+                method,
+                path,
+                elapsed_time,
+                status_code,
+            )
             return self.format_api_response(response_body, status_code)
         except Exception as e:
-            logger.error("API error processing %s: %s", event.get("routeKey", "unknown"), str(e), exc_info=True)
+            logger.error(
+                "API error processing %s: %s",
+                event.get("routeKey", "unknown"),
+                str(e),
+                exc_info=True,
+            )
             response_body = {"Error": "Error during API route processing:" + str(e)}
             return self.format_api_response(response_body, 404)
 
@@ -128,6 +140,10 @@ class ApiGatewayHandler:
 
         self.ddc.create_or_update_user_config(email, body)
         self.otlh.handle_one_time_link_creation(email, True)
+
+        config_dict = BethpageBlackBotConfig(body).config_to_dynamodb_item(email)
+        self.email_sender.send_user_update_to_admin_email(email, config_dict)
+
         return True, ""
 
     def get_user_config(self, event, user_email=None):
@@ -141,12 +157,20 @@ class ApiGatewayHandler:
         user_email = post_request_body["email"]
         self.ddc.create_or_update_user_config(user_email, post_request_body)
 
+        if user_email != self.email_sender.admin_email:
+            config_dict = BethpageBlackBotConfig(post_request_body).config_to_dynamodb_item(user_email)
+            self.email_sender.send_user_update_to_admin_email(
+                user_email, config_dict, is_new_account=False
+            )
+
     def create_one_time_link_and_send(self, event):
         post_request_body = json.loads(event.get("body", "{}"))
         user_email = post_request_body["email"]
         found_user, _ = self.get_user_config(event, user_email)
         if not found_user:
-            logger.warning("One-time link requested for unregistered email: %s", user_email)
+            logger.warning(
+                "One-time link requested for unregistered email: %s", user_email
+            )
             return False, f"Email not registered: {user_email}"
 
         # CREATE, SAVE, AND EMAIL THE LINK
@@ -158,8 +182,8 @@ class ApiGatewayHandler:
         post_request_body = json.loads(event.get("body", "{}"))
         guid_in_browser = post_request_body["guid"]
 
-        is_link_valid, emailOrErrorMessage = self.otlh.validate_one_time_link_and_get_email(
-            guid_in_browser
+        is_link_valid, emailOrErrorMessage = (
+            self.otlh.validate_one_time_link_and_get_email(guid_in_browser)
         )
         if is_link_valid:
             logger.info("One-time link validated for email: %s", emailOrErrorMessage)
