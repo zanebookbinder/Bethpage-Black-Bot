@@ -68,7 +68,7 @@ class LateNightWebScraper:
                 logger.debug("Found %d waitlist opportunities for %s", len(waitlist_entries[show_name]), show_name)
             except Exception as e:
                 logger.error("Error processing show %s: %s", show_name, str(e), exc_info=True)
-                raise e
+                waitlist_entries[show_name] = []
 
         return waitlist_entries
 
@@ -281,7 +281,7 @@ class LateNightWebScraper:
 
         except Exception as e:
             logger.error("Error finding calendar dates: %s", str(e))
-            raise e
+            return [], None
 
     def _find_main_button(self):
         """

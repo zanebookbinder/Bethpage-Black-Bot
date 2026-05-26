@@ -12,31 +12,33 @@ logger = logging.getLogger()
 logger.setLevel(logging.INFO)
 
 
+def _run_bot(name, bot_fn):
+    try:
+        return bot_fn()
+    except Exception as e:
+        logger.error("Bot %s failed: %s", name, str(e), exc_info=True)
+        return f"<p><strong>{name} failed to load.</strong></p>"
+
+
 def lambda_handler(event, context):
     logger.info("Starting daily update process")
-    # 1) get email response for late night shows
     late_night_bot = LateNightShowBot()
-    late_night_html = late_night_bot.scrape_data_and_return_email_html()
+    late_night_html = _run_bot("LateNightShowBot", late_night_bot.scrape_data_and_return_email_html)
 
-    # 2) get email response for new york cares
     nyc_bot = NewYorkCaresBot()
-    nyc_html = nyc_bot.scrape_data_and_return_email_html()
+    nyc_html = _run_bot("NewYorkCaresBot", nyc_bot.scrape_data_and_return_email_html)
 
-    # 3) get central park public volunteering
     cp_public_bot = CentralParkPublicVolunteeringBot()
-    cp_public_html = cp_public_bot.scrape_data_and_return_email_html()
+    cp_public_html = _run_bot("CentralParkPublicVolunteeringBot", cp_public_bot.scrape_data_and_return_email_html)
 
-    # 4) get central park private volunteering (MyImpactPage)
     cp_private_bot = CentralParkPrivateVolunteeringBot()
-    cp_private_html = cp_private_bot.scrape_data_and_return_email_html()
+    cp_private_html = _run_bot("CentralParkPrivateVolunteeringBot", cp_private_bot.scrape_data_and_return_email_html)
 
-    # 5) get NYC tennis reservations
     tennis_bot = NycTennisBot()
-    tennis_html = tennis_bot.scrape_data_and_return_email_html()
+    tennis_html = _run_bot("NycTennisBot", tennis_bot.scrape_data_and_return_email_html)
 
-    # 6) get today's health data
     health_bot = HealthDataBot()
-    health_html = health_bot.scrape_data_and_return_email_html()
+    health_html = _run_bot("HealthDataBot", health_bot.scrape_data_and_return_email_html)
 
     # 7) combine and send
     email_service = DailyUpdateEmailService()
