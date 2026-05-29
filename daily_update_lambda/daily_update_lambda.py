@@ -65,3 +65,7 @@ def lambda_handler(event, context):
 # health_bot = HealthDataBot()
 # health_html = health_bot.scrape_data_and_return_email_html()
 # print(health_html)
+
+# tennis_bot = NycTennisBot()
+# tennis_html = tennis_bot.scrape_data_and_return_email_html()
+# print(tennis_html)

@@ -1,10 +1,12 @@
 """Selenium scraper for NYC Parks tennis court availability."""
 
 import logging
+import time
 from datetime import datetime
 
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import TimeoutException
 
 from daily_update_helpers.chrome_helper import create_headless_chrome_driver
@@ -25,11 +27,12 @@ class NycTennisWebScraper:
 
     def __init__(self):
         self.driver, self.wait = create_headless_chrome_driver(wait_seconds=15)
+        self.short_wait = WebDriverWait(self.driver, 5)
 
     def scrape_weekend_reservations(self):
         """
-        Returns a list of (date_obj, date_label, {time_label: [url, ...]}) tuples
-        sorted by date ascending, covering only Saturday/Sunday dates.
+        Returns a list of (date_obj, date_label, time_slots) tuples sorted by date.
+        time_slots is None for dates that timed out.
         """
         self.driver.get(AVAILABILITY_URL)
         self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table")))
@@ -39,6 +42,7 @@ class NycTennisWebScraper:
 
         results = []
         for i, pos in enumerate(positions, 1):
+            t0 = time.time()
             old_heading = self._get_schedule_heading_text()
             logger.info(
                 "[%d/%d] Clicking date at table=%d row=%d col=%d (current heading: %r)",
@@ -46,25 +50,28 @@ class NycTennisWebScraper:
             )
 
             if not self._click_date_at_position(pos):
+                results.append((None, pos["day_text"], None))
                 continue
 
             try:
-                self.wait.until(lambda d: self._get_schedule_heading_text() != old_heading)
+                self.short_wait.until(lambda d: self._get_schedule_heading_text() != old_heading)
             except TimeoutException:
                 logger.warning(
-                    "[%d/%d] Heading did not change after clicking position %s",
-                    i, len(positions), pos,
+                    "[%d/%d] Timed out waiting for date to load: %s (%.1fs)",
+                    i, len(positions), pos["day_text"], time.time() - t0,
                 )
+                results.append((None, pos["day_text"], None))
+                continue
 
             date_obj, date_label = self._parse_selected_date_heading()
             time_slots = self._parse_availability_table()
 
             logger.info(
-                "[%d/%d] Scraped %r — found %d available time slot(s)",
-                i, len(positions), date_label, len(time_slots),
+                "[%d/%d] Scraped %r — found %d available time slot(s) in %.1fs",
+                i, len(positions), date_label, len(time_slots), time.time() - t0,
             )
 
-            if time_slots and date_label:
+            if date_label:
                 results.append((date_obj, date_label, time_slots))
 
         results.sort(key=lambda x: x[0] or datetime.max)
@@ -108,6 +115,7 @@ class NycTennisWebScraper:
                             "table_idx": calendar_table_idx,
                             "row_idx": row_idx,
                             "col_idx": col_idx,
+                            "day_text": day_text,
                         })
             calendar_table_idx += 1
         return positions

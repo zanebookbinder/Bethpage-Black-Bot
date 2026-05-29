@@ -31,9 +31,16 @@ class NycTennisBot:
         table_rows = ""
 
         for _date_obj, date_label, time_slots in reservations:
-            entries = list(time_slots.items())
             date_cell = html_module.escape(date_label)
 
+            if time_slots is None:
+                table_rows += (
+                    f'<tr><td style="{cell_style}">{date_cell}</td>'
+                    f'<td style="{cell_style}; color: #999;" colspan="2"><em>Failed to load</em></td></tr>'
+                )
+                continue
+
+            entries = list(time_slots.items())
             for i, (time_label, links) in enumerate(entries):
                 links_html = " &nbsp; ".join(
                     f'<a href="{html_module.escape(link)}" target="_blank">Reserve {j}</a>'
