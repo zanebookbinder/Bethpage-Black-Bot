@@ -1,5 +1,7 @@
 """Shared headless Chrome setup for Selenium web scrapers."""
 
+import os
+
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.chrome.service import Service
@@ -11,6 +13,10 @@ def create_headless_chrome_driver(wait_seconds: int = 10):
     Create a headless Chrome WebDriver for Lambda/local use.
     Returns (driver, wait) tuple.
     """
+    os.environ["HOME"] = "/tmp"
+    os.environ["XDG_CACHE_HOME"] = "/tmp"
+    os.environ["SELENIUM_CACHE_PATH"] = "/tmp/selenium"
+
     opts = Options()
     opts.add_argument("--headless=new")
     opts.add_argument("--no-sandbox")

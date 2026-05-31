@@ -1,80 +1,55 @@
 """Selenium scraper for NYC Parks tennis court availability."""
 
 import logging
-import time
 from datetime import datetime
 
+from bs4 import BeautifulSoup
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 
 from daily_update_helpers.chrome_helper import create_headless_chrome_driver
 
 logger = logging.getLogger(__name__)
 
 AVAILABILITY_URL = "https://www.nycgovparks.org/tennisreservation/availability/12"
-_DAYS_OF_WEEK = [
-    "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
-]
+_DAYS_OF_WEEK = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]
 
 
 class NycTennisWebScraper:
-    """
-    Scrapes the NYC Parks tennis reservation calendar for a single facility.
-    Clicks each available weekend date and collects reservation links per time slot.
-    """
-
     def __init__(self):
         self.driver, self.wait = create_headless_chrome_driver(wait_seconds=15)
-        self.short_wait = WebDriverWait(self.driver, 5)
 
     def scrape_weekend_reservations(self):
         """
-        Returns a list of (date_obj, date_label, time_slots) tuples sorted by date.
-        time_slots is None for dates that timed out.
+        Returns a list of (date_obj, date_label, {time_label: [url, ...]}) tuples
+        sorted by date ascending, covering only Saturday/Sunday dates with availability.
+
+        The page pre-loads all date schedules as Bootstrap tab-panes — no navigation needed.
         """
         self.driver.get(AVAILABILITY_URL)
         self.wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, "table")))
 
-        positions = self._collect_weekend_positions()
-        logger.info("Found %d available weekend dates to visit", len(positions))
+        soup = BeautifulSoup(self.driver.page_source, "html.parser")
 
         results = []
-        for i, pos in enumerate(positions, 1):
-            t0 = time.time()
-            old_heading = self._get_schedule_heading_text()
-            logger.info(
-                "[%d/%d] Clicking date at table=%d row=%d col=%d (current heading: %r)",
-                i, len(positions), pos["table_idx"], pos["row_idx"], pos["col_idx"], old_heading,
-            )
-
-            if not self._click_date_at_position(pos):
-                results.append((None, pos["day_text"], None))
+        for pane in soup.find_all(class_="tab-pane"):
+            date_obj, date_label = self._parse_date_heading(pane)
+            if not date_obj:
                 continue
 
-            try:
-                self.short_wait.until(lambda d: self._get_schedule_heading_text() != old_heading)
-            except TimeoutException:
-                logger.warning(
-                    "[%d/%d] Timed out waiting for date to load: %s (%.1fs)",
-                    i, len(positions), pos["day_text"], time.time() - t0,
-                )
-                results.append((None, pos["day_text"], None))
+            # weekday(): 5=Saturday, 6=Sunday
+            if date_obj.weekday() not in (5, 6):
                 continue
 
-            date_obj, date_label = self._parse_selected_date_heading()
-            time_slots = self._parse_availability_table()
+            time_slots = self._parse_availability(pane)
+            if not time_slots:
+                continue
 
-            logger.info(
-                "[%d/%d] Scraped %r — found %d available time slot(s) in %.1fs",
-                i, len(positions), date_label, len(time_slots), time.time() - t0,
-            )
+            logger.info("Found %r with %d available time slot(s)", date_label, len(time_slots))
+            results.append((date_obj, date_label, time_slots))
 
-            if date_label:
-                results.append((date_obj, date_label, time_slots))
-
-        results.sort(key=lambda x: x[0] or datetime.max)
+        results.sort(key=lambda x: x[0])
+        logger.info("Scraped %d weekend dates with availability", len(results))
         return results
 
     def quit(self):
@@ -84,133 +59,52 @@ class NycTennisWebScraper:
             pass
 
     # ------------------------------------------------------------------
-    # Calendar helpers
+    # Parse helpers
     # ------------------------------------------------------------------
 
-    def _collect_weekend_positions(self):
-        """
-        Walk every calendar table (S M T W T F S header) and record
-        (table_idx, row_idx, col_idx) for each linked Saturday/Sunday cell.
-        col 0 = Sunday, col 6 = Saturday.
-        """
-        positions = []
-        calendar_table_idx = 0
-        for table in self.driver.find_elements(By.CSS_SELECTOR, "table"):
-            if not self._is_calendar_table(table):
-                continue
-            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr")
-            for row_idx, row in enumerate(rows):
-                cells = row.find_elements(By.TAG_NAME, "td")
-                for col_idx in [0, 6]:
-                    if col_idx >= len(cells):
-                        continue
-                    anchors = cells[col_idx].find_elements(By.TAG_NAME, "a")
-                    if anchors:
-                        day_text = anchors[0].text.strip()
-                        logger.info(
-                            "Found available weekend date: table=%d row=%d col=%d day=%r",
-                            calendar_table_idx, row_idx, col_idx, day_text,
-                        )
-                        positions.append({
-                            "table_idx": calendar_table_idx,
-                            "row_idx": row_idx,
-                            "col_idx": col_idx,
-                            "day_text": day_text,
-                        })
-            calendar_table_idx += 1
-        return positions
-
-    def _click_date_at_position(self, pos):
-        """Re-find the calendar link at (table_idx, row_idx, col_idx) and click it."""
-        try:
-            calendar_tables = [
-                t for t in self.driver.find_elements(By.CSS_SELECTOR, "table")
-                if self._is_calendar_table(t)
-            ]
-            table = calendar_tables[pos["table_idx"]]
-            rows = table.find_elements(By.CSS_SELECTOR, "tbody tr")
-            cells = rows[pos["row_idx"]].find_elements(By.TAG_NAME, "td")
-            anchor = cells[pos["col_idx"]].find_element(By.TAG_NAME, "a")
-            self.driver.execute_script("arguments[0].click();", anchor)
-            return True
-        except Exception as e:
-            logger.warning("Could not click date at position %s: %s", pos, e)
-            return False
-
-    def _is_calendar_table(self, table):
-        """Return True if this table has the S M T W T F S day-of-week header."""
-        th_elements = table.find_elements(By.TAG_NAME, "th")
-        return [th.text.strip() for th in th_elements] == ["S", "M", "T", "W", "T", "F", "S"]
-
-    # ------------------------------------------------------------------
-    # Schedule helpers
-    # ------------------------------------------------------------------
-
-    def _get_schedule_heading_text(self):
-        """Return the text of the heading that contains a day-of-week name, or None."""
+    def _parse_date_heading(self, soup):
+        """Parse a date heading from a BS4 element. Returns (datetime, label) or (None, None)."""
         for tag in ["h1", "h2", "h3", "h4"]:
-            for el in self.driver.find_elements(By.TAG_NAME, tag):
-                text = el.text.strip()
+            for el in soup.find_all(tag):
+                text = el.get_text(strip=True)
                 if any(day in text for day in _DAYS_OF_WEEK):
-                    return text
-        return None
-
-    def _parse_selected_date_heading(self):
-        """
-        Parse the schedule heading into a (datetime, label) pair.
-        Returns (None, None) if no parseable heading is found.
-        """
-        text = self._get_schedule_heading_text()
-        if not text:
-            logger.warning("No date heading found on %s", self.driver.current_url)
-            return None, None
-
-        for fmt in ["%A, %B %d, %Y", "%B %d, %Y"]:
-            try:
-                d = datetime.strptime(text, fmt)
-                return d, d.strftime("%A, %B %-d, %Y")
-            except ValueError:
-                pass
-
-        logger.warning("Could not parse date heading: %r", text)
+                    for fmt in ["%A, %B %d, %Y", "%B %d, %Y"]:
+                        try:
+                            d = datetime.strptime(text, fmt)
+                            return d, d.strftime("%A, %B %-d, %Y")
+                        except ValueError:
+                            pass
         return None, None
 
-    def _parse_availability_table(self):
+    def _parse_availability(self, soup):
         """
-        Parse the court availability grid on the currently displayed date.
-        Returns {time_label: [reservation_url, ...]} for slots with at least one
-        "Reserve this time" link.
+        Parse court availability from a BS4 element (typically a tab-pane).
+        Returns {time_label: [reservation_url, ...]} for slots with at least one link.
         """
         time_slots = {}
-        for table in self.driver.find_elements(By.CSS_SELECTOR, "table"):
-            if self._is_calendar_table(table):
-                continue
-            rows = table.find_elements(By.TAG_NAME, "tr")
+        for table in soup.find_all("table"):
+            rows = table.find_all("tr")
             if len(rows) < 2:
                 continue
-
-            header_cells = (
-                rows[0].find_elements(By.TAG_NAME, "th")
-                or rows[0].find_elements(By.TAG_NAME, "td")
-            )
-            if not any("Court" in c.text for c in header_cells):
+            header_cells = rows[0].find_all(["th", "td"])
+            if not any("Court" in c.get_text() for c in header_cells):
                 continue
 
             for row in rows[1:]:
-                cells = row.find_elements(By.TAG_NAME, "td")
+                cells = row.find_all("td")
                 if not cells:
                     continue
-                time_label = cells[0].text.strip()
+                time_label = cells[0].get_text(strip=True)
                 if not time_label:
                     continue
 
-                reservation_links = []
-                for cell in cells[1:]:
-                    for anchor in cell.find_elements(By.TAG_NAME, "a"):
-                        href = anchor.get_attribute("href") or ""
-                        if "reservecp" in href or "reserve" in href.lower():
-                            reservation_links.append(href)
-
+                reservation_links = [
+                    "https://www.nycgovparks.org" + a["href"]
+                    if a["href"].startswith("/") else a["href"]
+                    for cell in cells[1:]
+                    for a in cell.find_all("a")
+                    if "reserve" in a.get("href", "").lower()
+                ]
                 if reservation_links:
                     time_slots[time_label] = reservation_links
 
