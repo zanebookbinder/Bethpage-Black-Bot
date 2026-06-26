@@ -43,6 +43,19 @@ jest.mock('../utils', () => ({
     const [month, day] = md.split('/');
     const year = new Date().getFullYear();
     return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+  }),
+  filterOutPastDates: jest.fn((dates) => {
+    // Mock: keep non-empty, parseable, non-past dates
+    if (!Array.isArray(dates)) return [];
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return dates
+      .map((d) => (typeof d === 'string' ? d.trim() : ''))
+      .filter((d) => {
+        if (!d) return false;
+        const parsed = new Date(d);
+        return !isNaN(parsed.getTime()) && parsed >= today;
+      });
   })
 }));
 

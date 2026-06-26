@@ -10,7 +10,7 @@ import {
     CheckboxField,
     Loader,
 } from "@aws-amplify/ui-react";
-import { convertTo12Hour, convertTo24Hour, isValidDate, formatDateToMD, formatMDToDate } from "../utils";
+import { convertTo12Hour, convertTo24Hour, isValidDate, formatDateToMD, formatMDToDate, filterOutPastDates } from "../utils";
 import CustomDateInput from "./CustomDateInput";
 import ToggleButtonPair from "./ToggleButtonPair";
 import { API_BASE_URL } from "../utils";
@@ -194,11 +194,14 @@ export default function UpdateNotificationSettingsForm({ email }) {
 
             if (response.success) {
                 let data = response.result;
+                // Drop any saved dates that are now in the past so they don't
+                // linger in the Extra Playable Days / Blackout Dates menus.
+                const extraPlayableDays = filterOutPastDates(data.extra_playable_days) || [];
                 setUserSettings({
                     playable_days_of_week: data.playable_days_of_week || [],
                     earliest_playable_time:
                         convertTo24Hour(data.earliest_playable_time) || "",
-                    extra_playable_days: data.extra_playable_days,
+                    extra_playable_days: extraPlayableDays.length ? extraPlayableDays : [""],
                     include_holidays: data.include_holidays,
                     minimum_minutes_before_sunset: String(
                         data.minimum_minutes_before_sunset || ""
@@ -208,7 +211,7 @@ export default function UpdateNotificationSettingsForm({ email }) {
                     start_date: formatMDToDate(data.start_date || "3/1"),
                     end_date: formatMDToDate(data.end_date || "11/30"),
                     in_state_golfer: data.in_state_golfer ?? true,
-                    blackout_dates: data.blackout_dates || [],
+                    blackout_dates: filterOutPastDates(data.blackout_dates) || [],
                 });
                 setNotificationsCurrentlyEnabled(data.notifications_enabled);
             } else {

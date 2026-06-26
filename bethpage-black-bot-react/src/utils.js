@@ -49,6 +49,27 @@ export function isValidDateWithinOneYear(dateStr) {
     return isValidDate(dateStr);
 }
 
+// Normalize a date string to YYYY-MM-DD, accepting legacy M/D/YYYY ("/"-style) input.
+export function normalizeDate(dateStr) {
+    if (!dateStr || typeof dateStr !== "string") return "";
+    const trimmed = dateStr.trim();
+    if (trimmed.includes("/")) {
+        const [month, day, year] = trimmed.split("/");
+        if (!month || !day || !year) return trimmed;
+        return `${year}-${month.padStart(2, "0")}-${day.padStart(2, "0")}`;
+    }
+    return trimmed;
+}
+
+// Remove past (and invalid/blank) dates from a list, returning normalized YYYY-MM-DD strings.
+// Used to keep saved-but-now-past dates out of the settings menus when editing.
+export function filterOutPastDates(dates) {
+    if (!Array.isArray(dates)) return [];
+    return dates
+        .map(normalizeDate)
+        .filter((d) => d.length > 0 && isValidDate(d));
+}
+
 export function formatDateToMD(dateStr) {
     // Convert YYYY-MM-DD to M/D format
     const regex = /^(\d{4})-(\d{2})-(\d{2})$/;

@@ -154,6 +154,8 @@ export default function CustomDateInput({
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <DatePicker
                                 value={date ? dayjs(date) : null}
+                                minDate={dayjs().startOf('day')}
+                                disablePast
                                 onChange={(newValue) => {
                                     if (newValue && newValue.isValid()) {
                                         updateDate(i, newValue.format('YYYY-MM-DD'));

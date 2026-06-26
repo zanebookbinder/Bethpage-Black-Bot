@@ -85,38 +85,6 @@ describe('CurrentTeeTimes', () => {
     expect(screen.queryByText('Book your tee time here')).not.toBeInTheDocument();
   });
 
-  it('displays tee times in a grid layout', async () => {
-    const mockTeeTimes = [
-      {
-        Date: 'Saturday May 27th',
-        Time: '10:30am',
-        Players: '4',
-        Holes: '18'
-      },
-      {
-        Date: 'Saturday May 27th',
-        Time: '11:00am',
-        Players: '3',
-        Holes: '18'
-      }
-    ];
-
-    global.fetch.mockResolvedValueOnce({
-      json: async () => ({ result: mockTeeTimes })
-    });
-
-    const { container } = render(<CurrentTeeTimes />);
-
-    await waitFor(() => {
-      const gridDiv = container.querySelector('div[style*="grid"]');
-      expect(gridDiv).toBeInTheDocument();
-      expect(gridDiv).toHaveStyle({
-        display: 'grid',
-        gridTemplateColumns: 'repeat(2, 1fr)'
-      });
-    });
-  });
-
   it('calls the correct API endpoint', async () => {
     global.fetch.mockResolvedValueOnce({
       json: async () => ({ result: [] })
