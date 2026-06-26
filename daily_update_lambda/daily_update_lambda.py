@@ -5,6 +5,7 @@ from central_park_public_volunteering_bot import CentralParkPublicVolunteeringBo
 from central_park_private_volunteering_bot import CentralParkPrivateVolunteeringBot
 from nyc_tennis_bot import NycTennisBot
 from health_data_bot import HealthDataBot
+from weekly_nyc_events_bot import WeeklyNycEventsBot
 from daily_update_helpers.daily_updates_email_service import DailyUpdateEmailService
 
 # Configure logging
@@ -40,10 +41,14 @@ def lambda_handler(event, context):
     health_bot = HealthDataBot()
     health_html = _run_bot("HealthDataBot", health_bot.scrape_data_and_return_email_html)
 
-    # 7) combine and send
+    weekly_events_bot = WeeklyNycEventsBot()
+    weekly_events_html = _run_bot("WeeklyNycEventsBot", weekly_events_bot.scrape_data_and_return_email_html)
+
+    # combine and send (weekly events go last so the collapsible section sits at the bottom)
     email_service = DailyUpdateEmailService()
     email_service.send_combined_email(
-        [tennis_html, late_night_html, nyc_html, cp_public_html, cp_private_html, health_html],
+        [weekly_events_html, nyc_html, tennis_html, late_night_html, 
+         cp_public_html, cp_private_html, health_html],
         subject="Zane's Daily Update",
     )
 

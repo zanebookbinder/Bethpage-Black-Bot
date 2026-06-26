@@ -5,6 +5,10 @@ REGION_NAME = "us-east-1"
 DAILY_UPDATES_SECRET_NAME = "daily-updates-secret"
 BETHPAGE_SECRET_NAME = "bethpage-secret"
 
+# Bedrock (used for durable LLM-based HTML extraction)
+BEDROCK_REGION = "us-east-1"
+BEDROCK_MODEL_ID = "us.anthropic.claude-haiku-4-5-20251001-v1:0"
+
 # Central Park Public Volunteering
 CENTRAL_PARK_PUBLIC_URL = (
     "https://www.centralparknyc.org/volunteer/community-volunteer-days"
@@ -34,6 +38,22 @@ IOTIA_URL_TO_SHOW_NAME = {
 
 # New York Cares
 NEW_YORK_CARES_BASE_URL = "https://www.newyorkcares.org/volunteers?boroughs%5B%5D=Manhattan&days%5B%5D=Saturday&days%5B%5D=Sunday"
+
+# Weekly NYC Events
+POPUP_BAGELS_URL = "https://www.popupbagels.com"
+TIME_OUT_NYC_BASE_URL = "https://www.timeout.com"
+TIME_OUT_NYC_WEEKEND_URL = (
+    "https://www.timeout.com/newyork/things-to-do/things-to-do-in-nyc-this-weekend"
+)
+
+# Pop-ups & dessert specials (JSON sources)
+DONYC_BASE_URL = "https://donyc.com"
+DONYC_POPUPS_URL = "https://donyc.com/pop-ups-nyc"
+NYC_FOR_FREE_BASE_URL = "https://www.nycforfree.co"
+NYC_FOR_FREE_EVENTS_URL = "https://www.nycforfree.co/events"
+
+# How far ahead to surface pop-up / free events (days from today).
+POPUP_EVENT_LOOKAHEAD_DAYS = 21
 
 # Scraping limits
 MAX_MYIMPACTPAGE_SHIFTS = 30
