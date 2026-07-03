@@ -6,6 +6,7 @@ from central_park_private_volunteering_bot import CentralParkPrivateVolunteering
 from nyc_tennis_bot import NycTennisBot
 from health_data_bot import HealthDataBot
 from weekly_nyc_events_bot import WeeklyNycEventsBot
+from aws_cost_bot import AwsCostBot
 from daily_update_helpers.daily_updates_email_service import DailyUpdateEmailService
 
 # Configure logging
@@ -44,13 +45,21 @@ def lambda_handler(event, context):
     weekly_events_bot = WeeklyNycEventsBot()
     weekly_events_html = _run_bot("WeeklyNycEventsBot", weekly_events_bot.scrape_data_and_return_email_html)
 
+    aws_cost_bot = AwsCostBot()
+    aws_cost_html = _run_bot("AwsCostBot", aws_cost_bot.scrape_data_and_return_email_html)
+
     # combine and send (weekly events go last so the collapsible section sits at the bottom)
+    sections = [weekly_events_html, nyc_html, tennis_html]
+    # AWS costs normally sit near the bottom (above late night + step count), but
+    # jump to the very top of the email if any single service exceeded the threshold.
+    if aws_cost_bot.has_high_charge_item:
+        sections.insert(0, aws_cost_html)
+        sections += [late_night_html, cp_public_html, cp_private_html, health_html]
+    else:
+        sections += [aws_cost_html, late_night_html, cp_public_html, cp_private_html, health_html]
+
     email_service = DailyUpdateEmailService()
-    email_service.send_combined_email(
-        [weekly_events_html, nyc_html, tennis_html, late_night_html, 
-         cp_public_html, cp_private_html, health_html],
-        subject="Zane's Daily Update",
-    )
+    email_service.send_combined_email(sections, subject="Zane's Daily Update")
 
     logger.info("Daily update process completed successfully")
     return {"message": "Zane's Daily Update sent."}
