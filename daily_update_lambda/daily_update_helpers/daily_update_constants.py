@@ -25,12 +25,13 @@ MYIMPACTPAGE_NAVBAR_MARKERS = ("Back to Activity List", "Log Out", "Help")
 
 # Late Night Shows (1iota)
 IOTIA_BASE_URL = "https://1iota.com/"
-IOTIA_COLBERT_URL = "https://1iota.com/show/536/the-late-show-with-stephen-colbert"
+# The Late Show with Stephen Colbert ended its run (May 2026) and no longer has
+# tapings on 1iota (show/536 returns no ticket calendar), which caused
+# "Error finding calendar dates" timeouts. Removed from the scrape list.
 IOTIA_SETH_MEYERS_URL = "https://1iota.com/show/461/late-night-with-seth-meyers"
 IOTIA_DAILY_SHOW_URL = "https://1iota.com/show/1248/the-daily-show"
 IOTIA_FALLON_URL = "https://1iota.com/show/353/the-tonight-show-starring-jimmy-fallon"
 IOTIA_URL_TO_SHOW_NAME = {
-    IOTIA_COLBERT_URL: "The Late Show with Stephen Colbert",
     IOTIA_SETH_MEYERS_URL: "Late Night with Seth Meyers",
     IOTIA_DAILY_SHOW_URL: "The Daily Show",
     IOTIA_FALLON_URL: "The Tonight Show Starring Jimmy Fallon",
