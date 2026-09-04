@@ -1,5 +1,15 @@
 from datetime import datetime, timedelta
+from zoneinfo import ZoneInfo
 import re
+
+# The course, the users and every time we display are all Eastern. The lambda
+# itself runs in UTC, so anything user-facing has to be stamped explicitly.
+EASTERN = ZoneInfo("America/New_York")
+
+
+def now_eastern():
+	return datetime.now(EASTERN)
+
 
 class DateHandler():
 

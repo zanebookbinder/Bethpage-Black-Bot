@@ -1,5 +1,7 @@
 import logging
+from lambda_helpers.date_handler import now_eastern
 from lambda_helpers.dynamo_db_connection import DynamoDBConnection
+from lambda_helpers.email_log import EmailLog
 from lambda_helpers.email_sender import EmailSender
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
 from lambda_helpers.secret_handler import SecretHandler
@@ -21,16 +23,27 @@ class BethpageBlackBot:
         )
         email_sender = EmailSender()
         otlh = OneTimeLinkHandler(expire_minutes=PAUSE_LINK_EXPIRE_MINUTES)
+        email_log = EmailLog()
+        run_time = now_eastern()
         try:
             new_times = self.get_new_tee_times()
             for email, new_times_list in new_times.items():
                 pause_guid = otlh.generate_and_store_link(email, is_pause=True)
                 email_sender.send_email(email, new_times_list, pause_guid=pause_guid)
+                self.log_email_sent(email_log, run_time, email, new_times_list)
         except Exception as e:
             logger.error("Error in tee time notification process: %s", str(e), exc_info=True)
             error_message = traceback.format_exc()
             email_sender.send_error_email(error_message)
             raise e
+
+    def log_email_sent(self, email_log, run_time, email, new_times_list):
+        """Record the email for the weekly admin report. Never let a logging
+        failure stop the remaining notifications from going out."""
+        try:
+            email_log.record_email_sent(run_time, email, new_times_list)
+        except Exception as e:
+            logger.error("Failed to log notification email to %s: %s", email, str(e))
 
     def get_new_tee_times(self):
         web_scraper = WebScraper(self.bethpage_email, self.bethpage_password)

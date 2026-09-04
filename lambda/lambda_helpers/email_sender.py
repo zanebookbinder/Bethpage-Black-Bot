@@ -21,6 +21,8 @@ ONE_TIME_LINK_EMAIL_TEXT = (
 )
 ONE_TIME_LINK_EMAIL_SUBJECT = "One Time Link to Update Your Bethpage Black Bot Settings"
 
+WEEKLY_EMAIL_REPORT_SUBJECT = "Bethpage Black Bot Email Report"
+
 FRONTEND_URL = "https://www.bethpage-black-bot.com"
 
 
@@ -178,6 +180,18 @@ class EmailSender:
             Destination={"ToAddresses": [self.admin_notify_email]},
             Message={
                 "Subject": {"Data": subject},
+                "Body": {"Html": {"Data": body_html}},
+            },
+        )
+
+    def send_weekly_email_report(self, body_html):
+        logger.info("Sending weekly email report to %s", self.admin_notify_email)
+
+        self.ses.send_email(
+            Source=self.admin_email,
+            Destination={"ToAddresses": [self.admin_notify_email]},
+            Message={
+                "Subject": {"Data": WEEKLY_EMAIL_REPORT_SUBJECT},
                 "Body": {"Html": {"Data": body_html}},
             },
         )

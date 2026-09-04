@@ -29,6 +29,8 @@ lambda/
   main.py                          # Lambda handler, routes API vs scheduled
   bethpage_black_bot.py            # Orchestrates scrape → filter → diff → notify
   api_gateway_handler.py           # REST API routing and response formatting
+  send_weekly_email_report.py      # Manual runner for the weekly admin email report
+  backfill_email_log.py            # One-off: rebuild email history from CloudWatch + snapshots
   lambda_helpers/
     tee_time_filterer.py           # Core filtering logic (day, time, sunset, players, holes)
     bethpage_black_config.py       # User config object with DynamoDB Decimal handling
@@ -37,6 +39,8 @@ lambda/
     one_time_link_handler.py       # GUID-based auth link generation and validation
     web_scraper.py                 # Selenium scraper for Bethpage tee time site
     email_sender.py                # SES email formatting and sending
+    email_log.py                   # Records every notification email sent (for the weekly report)
+    weekly_email_report.py         # Builds/sends the weekly "Bethpage Black Bot Email Report"
     secret_handler.py              # AWS Secrets Manager access
 
 daily_update_lambda/
@@ -119,7 +123,31 @@ aws logs tail /aws/lambda/bethpage-black-bot --follow   # live logs
 
 **Infra scripts — run only when that infrastructure changes, not on every deploy:**
 - `lambda/deploy_api_gateway.sh` — (re)creates the `bethpage-black-bot-api` API Gateway (stage `prod`) and its routes/integration to the Lambda. Run when API routes change.
-- `lambda/deploy_dynamo_db.sh` — creates the DynamoDB tables (`bethpage-black-bot-config`, `bethpage-black-bot-one-time-links`) if missing.
+- `lambda/deploy_dynamo_db.sh` — creates the DynamoDB tables (`bethpage-black-bot-config`, `bethpage-black-bot-one-time-links`, `daily-updates-data`, `bethpage-black-bot-email-log`) if missing.
+
+### Weekly admin email report
+
+Every tee time notification is logged to the `bethpage-black-bot-email-log` table by `EmailLog` (one item per user per run, sharing a `run_id`). On the **first scheduled run after 7pm Eastern on a Sunday**, `WeeklyEmailReport.send_report_if_due()` emails the admin address a "Bethpage Black Bot Email Report": a total-emails count plus a table of Email Time / Tee Time Slot / Users Notified. A `weekly-report-sent#<sunday>` marker item in the same table stops later runs that evening from sending a duplicate.
+
+**Timezone:** the lambda runs in UTC, so anything user-facing is stamped Eastern explicitly via `date_handler.EASTERN` / `now_eastern()`. Email-log `id`/`run_id`/`sent_at` are Eastern ISO strings (`2026-08-20T14:18:30-04:00`); `sent_at_epoch` is what the report actually sorts and filters on, so the repeated hour when EDT rolls back to EST can't misorder rows.
+
+The report always covers the **trailing 7 days**, so it can be run and verified on any day:
+
+```bash
+cd lambda
+python send_weekly_email_report.py --dry-run   # print the HTML
+python send_weekly_email_report.py             # actually email it (does not consume the weekly marker)
+```
+
+`aws lambda invoke` with `{"action": "send_weekly_email_report"}` does the same thing in the deployed lambda.
+
+**Backfilling history:** `lambda/backfill_email_log.py` reconstructs pre-logging emails by pulling the "Sending tee time notification to X with N new times" lines from CloudWatch Logs Insights and replaying the bot's diff against the `tee-times` snapshot table to recover which slots each user got. Records whose replayed count disagrees with the log line (usually a since-changed user config) are written with `approximate: True`.
+
+```bash
+cd lambda
+python backfill_email_log.py --days 30 --dry-run   # shows a match rate, writes nothing
+python backfill_email_log.py --days 30
+```
 
 ## Deploying the Daily Update Bot
 
@@ -148,21 +176,25 @@ aws logs tail /aws/lambda/daily-update-bot --follow   # live logs
 
 ## Running Tests
 
-No test framework is currently configured. When adding tests, use `pytest`:
+`pytest` suites live in `tests/lambda/` and `tests/daily_update_lambda/`. There is no
+`conftest.py` or `pytest.ini`, so **`PYTHONPATH` must point at the lambda directory** —
+a bare `pytest` fails collection with `ModuleNotFoundError: No module named 'lambda_helpers'`.
 
 ```bash
-# Install test dependencies
-pip install pytest
+# Bethpage lambda tests
+PYTHONPATH="lambda" python -m pytest tests/lambda -q
 
-# Run all tests
-pytest
+# Daily update lambda tests
+PYTHONPATH="daily_update_lambda" python -m pytest tests/daily_update_lambda -q
 
-# Run a single test file
-pytest tests/test_date_handler.py
-
-# Run a specific test
-pytest tests/test_date_handler.py::TestDateHandler::test_get_day_suffix
+# A single test
+PYTHONPATH="lambda" python -m pytest tests/lambda/test_date_handler.py::TestDateHandler::test_get_day_suffix
 ```
+
+> As of 8/21/2026, `tests/lambda` has 7 pre-existing failures in
+> `test_one_time_link_handler.py`, `test_api_gateway_handler.py` and
+> `test_dynamo_db_connection.py` — stale expectations that predate
+> `validate_one_time_link_and_get_email()` returning a 3-tuple. 96 pass.
 
 ## Key Conventions
 
@@ -170,5 +202,6 @@ pytest tests/test_date_handler.py::TestDateHandler::test_get_day_suffix
 - Tee time dicts use keys: `Date`, `Time`, `Players`, `Holes` (capitalized).
 - User configs are stored in DynamoDB with the user's email as the `id` key.
 - `TeeTimeFilterer` connects to DynamoDB in its `__init__` — tests must mock `DynamoDBConnection`.
+- A user in the `all-emails` list with **no config row** is skipped with a warning, not notified. `get_user_config_as_object()` returns `None` for them; do not "fix" this by falling back to `BethpageBlackBotConfig()` defaults, which would silently notify them on the default Sat/Sun preferences. (`backfill_email_log.py` deliberately overrides this to replay history, when the bot did use defaults.)
 - All secret/AWS access happens through dedicated handler classes (`SecretHandler`, `DailyUpdateSecretHandler`) — mock these at the class level in tests.
 - The React frontend lives in `bethpage-black-bot-react/` (separate from the Python lambdas).

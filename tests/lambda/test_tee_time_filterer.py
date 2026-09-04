@@ -161,3 +161,44 @@ class TestFilterTeeTimesForUser:
         tee_times = [{"Date": "Saturday June 20th", "Time": "9:00am", "Players": "3", "Holes": "18"}]
         result = f.filter_tee_times_for_user(tee_times, "user@test.com")
         assert result == []
+
+    def test_missing_config_returns_empty(self):
+        """An address in all-emails with no config row must be skipped, not
+        notified on the default Saturday/Sunday preferences."""
+        f = make_filterer()
+        f.db_table = MagicMock()
+        f.db_table.get_user_config.return_value = None
+
+        # A Saturday morning slot, which the defaults would happily match.
+        tee_times = [{"Date": "Saturday June 20th", "Time": "9:00am", "Players": "3", "Holes": "18"}]
+        result = f.filter_tee_times_for_user(tee_times, "nobody@test.com")
+        assert result == []
+
+    def test_missing_config_logs_warning(self, caplog):
+        f = make_filterer()
+        f.db_table = MagicMock()
+        f.db_table.get_user_config.return_value = None
+
+        with caplog.at_level("WARNING"):
+            f.filter_tee_times_for_user([], "nobody@test.com")
+
+        assert "nobody@test.com" in caplog.text
+        assert "no config row" in caplog.text
+
+
+class TestGetUserConfigAsObject:
+    def test_returns_none_when_no_config_row(self):
+        f = make_filterer()
+        f.db_table = MagicMock()
+        f.db_table.get_user_config.return_value = None
+        assert f.get_user_config_as_object("nobody@test.com") is None
+
+    def test_returns_config_object_when_row_exists(self):
+        f = make_filterer()
+        config = BethpageBlackBotConfig({"min_players": 4})
+        f.db_table = MagicMock()
+        f.db_table.get_user_config.return_value = config.config_to_dynamodb_item("user@test.com")
+
+        result = f.get_user_config_as_object("user@test.com")
+        assert result is not None
+        assert result.min_players == 4

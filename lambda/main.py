@@ -2,10 +2,13 @@ import logging
 from bethpage_black_bot import BethpageBlackBot
 from api_gateway_handler import ApiGatewayHandler
 from lambda_helpers.one_time_link_handler import OneTimeLinkHandler
+from lambda_helpers.weekly_email_report import WeeklyEmailReport
 
 # Configure logging
 logger = logging.getLogger()
 logger.setLevel(logging.INFO)
+
+WEEKLY_EMAIL_REPORT_ACTION = "send_weekly_email_report"
 
 def lambda_handler(event, context):
     # If the event came from API Gateway (HTTP API)
@@ -14,6 +17,13 @@ def lambda_handler(event, context):
         response = handler.handle(event)
         return response
 
+    # Manual trigger: send the weekly report right now, whatever day it is.
+    if event.get("action") == WEEKLY_EMAIL_REPORT_ACTION:
+        email_count = WeeklyEmailReport().send_report()
+        return ApiGatewayHandler().format_api_response(
+            {"message": f"Weekly email report sent covering {email_count} emails."}, 200
+        )
+
     # Otherwise, this is a scheduled or direct invocation
     bot = BethpageBlackBot()
     bot.notify_if_new_tee_times()
@@ -21,6 +31,12 @@ def lambda_handler(event, context):
     # remove old one time links
     one_time_link_handler = OneTimeLinkHandler()
     one_time_link_handler.remove_old_one_time_links()
+
+    # weekly admin report — sends on the first Sunday run after 7pm ET
+    try:
+        WeeklyEmailReport().send_report_if_due()
+    except Exception as e:
+        logger.error("Failed to send weekly email report: %s", str(e), exc_info=True)
 
     success_message = {"message": "Tee time check completed."}
     return ApiGatewayHandler().format_api_response(success_message, 200)

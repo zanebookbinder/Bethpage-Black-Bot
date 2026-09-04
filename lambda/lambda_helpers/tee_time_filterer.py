@@ -34,6 +34,14 @@ class TeeTimeFilterer:
         logger.debug("Filtering %d tee times for user: %s", len(tee_times_to_consider), user_email)
         user_config = self.get_user_config_as_object(user_email)
 
+        if user_config is None:
+            logger.warning(
+                "Skipping %s: address is in the all-emails list but has no config "
+                "row, so there are no settings to filter on",
+                user_email,
+            )
+            return []
+
         if not user_config.notifications_enabled:
             logger.debug("User %s has notifications disabled", user_email)
             return []
@@ -162,7 +170,12 @@ class TeeTimeFilterer:
         return date_obj <= today + timedelta(days=5)
 
     def get_user_config_as_object(self, user_email):
+        """Returns None when the user has no config row. Callers must skip those
+        users — falling back to BethpageBlackBotConfig's defaults would silently
+        notify them on the default Saturday/Sunday preferences."""
         config_data = self.db_table.get_user_config(user_email)
+        if config_data is None:
+            return None
         return BethpageBlackBotConfig(config_data)
 
     def remove_existing_tee_times(self, times_from_site, existing_times):

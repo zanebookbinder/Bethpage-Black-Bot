@@ -8,6 +8,7 @@ AWS_REGION=$(aws configure get region)
 CONFIG_TABLE_NAME="bethpage-black-bot-config"
 LINKS_TABLE_NAME="bethpage-black-bot-one-time-links"
 DAILY_UPDATES_TABLE_NAME="daily-updates-data"
+EMAIL_LOG_TABLE_NAME="bethpage-black-bot-email-log"
 
 create_table_if_not_exists() {
   local TABLE_NAME=$1
@@ -32,3 +33,4 @@ create_table_if_not_exists() {
 create_table_if_not_exists "$CONFIG_TABLE_NAME"
 create_table_if_not_exists "$LINKS_TABLE_NAME"
 create_table_if_not_exists "$DAILY_UPDATES_TABLE_NAME"
+create_table_if_not_exists "$EMAIL_LOG_TABLE_NAME"

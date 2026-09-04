@@ -54,9 +54,13 @@ class TestGetNewTeeTimes:
 
 
 class TestNotifyIfNewTeeTimes:
+    # EmailLog and OneTimeLinkHandler must be patched too: notify_if_new_tee_times
+    # constructs both, and an unmocked one writes to the real DynamoDB tables.
+    @patch("bethpage_black_bot.EmailLog")
+    @patch("bethpage_black_bot.OneTimeLinkHandler")
     @patch("bethpage_black_bot.EmailSender")
     @patch("bethpage_black_bot.SecretHandler")
-    def test_sends_emails(self, mock_secret, mock_email_cls):
+    def test_sends_emails(self, mock_secret, mock_email_cls, mock_otlh_cls, mock_log_cls):
         from bethpage_black_bot import BethpageBlackBot
 
         mock_secret.get_bethpage_username_and_password.return_value = ("user", "pass")
@@ -67,9 +71,51 @@ class TestNotifyIfNewTeeTimes:
 
         mock_email_cls.return_value.send_email.assert_called_once()
 
+    @patch("bethpage_black_bot.EmailLog")
+    @patch("bethpage_black_bot.OneTimeLinkHandler")
     @patch("bethpage_black_bot.EmailSender")
     @patch("bethpage_black_bot.SecretHandler")
-    def test_sends_error_email_on_exception(self, mock_secret, mock_email_cls):
+    def test_logs_each_email_sent(self, mock_secret, mock_email_cls, mock_otlh_cls, mock_log_cls):
+        from bethpage_black_bot import BethpageBlackBot
+
+        mock_secret.get_bethpage_username_and_password.return_value = ("user", "pass")
+        bot = BethpageBlackBot()
+        new_times = [{"Time": "8am"}]
+
+        with patch.object(bot, "get_new_tee_times", return_value={"a@b.com": new_times}):
+            bot.notify_if_new_tee_times()
+
+        mock_log_cls.return_value.record_email_sent.assert_called_once()
+        args = mock_log_cls.return_value.record_email_sent.call_args[0]
+        assert args[1] == "a@b.com"
+        assert args[2] == new_times
+
+    @patch("bethpage_black_bot.EmailLog")
+    @patch("bethpage_black_bot.OneTimeLinkHandler")
+    @patch("bethpage_black_bot.EmailSender")
+    @patch("bethpage_black_bot.SecretHandler")
+    def test_logging_failure_does_not_stop_sending(
+        self, mock_secret, mock_email_cls, mock_otlh_cls, mock_log_cls
+    ):
+        from bethpage_black_bot import BethpageBlackBot
+
+        mock_secret.get_bethpage_username_and_password.return_value = ("user", "pass")
+        mock_log_cls.return_value.record_email_sent.side_effect = RuntimeError("dynamo down")
+        bot = BethpageBlackBot()
+
+        with patch.object(bot, "get_new_tee_times", return_value={"a@b.com": [], "c@d.com": []}):
+            bot.notify_if_new_tee_times()
+
+        # Both users still got their email despite the log write blowing up.
+        assert mock_email_cls.return_value.send_email.call_count == 2
+
+    @patch("bethpage_black_bot.EmailLog")
+    @patch("bethpage_black_bot.OneTimeLinkHandler")
+    @patch("bethpage_black_bot.EmailSender")
+    @patch("bethpage_black_bot.SecretHandler")
+    def test_sends_error_email_on_exception(
+        self, mock_secret, mock_email_cls, mock_otlh_cls, mock_log_cls
+    ):
         from bethpage_black_bot import BethpageBlackBot
         import pytest
 
