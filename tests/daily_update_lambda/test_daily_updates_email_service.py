@@ -31,6 +31,14 @@ class TestSendCombinedEmail:
         assert "Only" in html
         assert "<hr>" not in html  # only one piece after filtering
 
+    def test_filters_empty_string_pieces(self):
+        svc, mock_ses = make_service()
+        svc.send_combined_email(["<p>Only</p>", "", None, ""])
+        call_kwargs = mock_ses.send_email.call_args[1]
+        html = call_kwargs["Message"]["Body"]["Html"]["Data"]
+        assert "Only" in html
+        assert "<hr>" not in html  # only one piece after filtering
+
     def test_custom_subject(self):
         svc, mock_ses = make_service()
         svc.send_combined_email(["<p>A</p>"], subject="Custom Subject")

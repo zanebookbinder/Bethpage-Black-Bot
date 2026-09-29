@@ -37,6 +37,9 @@ IOTIA_URL_TO_SHOW_NAME = {
     IOTIA_FALLON_URL: "The Tonight Show Starring Jimmy Fallon",
 }
 
+# Last Week Tonight with John Oliver (free studio audience tickets)
+LAST_WEEK_TONIGHT_URL = "https://www.lastweektickets.com/"
+
 # New York Cares
 NEW_YORK_CARES_BASE_URL = "https://www.newyorkcares.org/volunteers?boroughs%5B%5D=Manhattan&days%5B%5D=Saturday&days%5B%5D=Sunday"
 

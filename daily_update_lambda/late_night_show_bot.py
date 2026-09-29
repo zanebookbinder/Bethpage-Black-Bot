@@ -6,6 +6,10 @@ from daily_update_helpers.late_night_web_scraper import (
     LateNightWebScraper,
     URL_TO_SHOW_NAME_DICT,
 )
+from daily_update_helpers.last_week_tonight_web_scraper import (
+    LastWeekTonightWebScraper,
+    TicketStatus,
+)
 import traceback
 from daily_update_helpers.daily_updates_email_service import (
     DailyUpdateEmailService,
@@ -62,40 +66,93 @@ class LateNightShowBot:
 
         filtered = current_entries
 
-        if not filtered:
+        john_oliver_entries = self.scrape_john_oliver_entries()
+
+        if not filtered and not john_oliver_entries:
             return None
 
-        return self.build_waitlist_html(filtered)
+        return self.build_waitlist_html(filtered, john_oliver_entries)
 
-    def build_waitlist_html(self, new_waitlist_dict) -> str:
+    def scrape_john_oliver_entries(self):
+        """Scrape lastweektickets.com for John Oliver taping availability.
+
+        Returns [] on any failure so a scraping issue there never blocks the
+        rest of the late night email section.
+        """
+        scraper = LastWeekTonightWebScraper()
+        try:
+            entries = scraper.find_available_and_upcoming_tapings()
+            logger.info("Found %d Last Week Tonight entries", len(entries))
+            return entries
+        except Exception as e:
+            logger.error(
+                "Error scraping Last Week Tonight tickets: %s", str(e), exc_info=True
+            )
+            return []
+        finally:
+            scraper.close()
+
+    def build_waitlist_html(self, new_waitlist_dict, john_oliver_entries=None) -> str:
         """Return the HTML body for late night waitlists and optional volunteer opportunities."""
         html_lines = [
             "<div>",
             "<h2>Late Night Show Waitlists</h2>",
-            "<table style='width: auto; border-collapse: collapse;'>",
-            "<thead><tr style='background-color: #f0f0f0;'><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Show Name</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Date</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Time</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Button Text Found</th></tr></thead>",
-            "<tbody>",
         ]
 
-        for show_name, entries in new_waitlist_dict.items():
-            show_url = [
-                key
-                for key, value in URL_TO_SHOW_NAME_DICT.items()
-                if value == show_name
-            ][0]
+        if john_oliver_entries:
+            html_lines.append(self.build_john_oliver_html(john_oliver_entries))
 
-            for i, entry in enumerate(entries):
-                row = "<tr style='border: 1px solid #ddd;'>"
-                if i == 0:
-                    row += f"<td style='border: 1px solid #ddd; padding: 8px;' rowspan='{len(entries)}'>{show_name}<br/>{show_url}</td>"
-                row += f"<td style='border: 1px solid #ddd; padding: 8px;'>{entry.date}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.show_time}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.button_text}</td>"
-                row += "</tr>"
-                html_lines.append(row)
+        if new_waitlist_dict:
+            html_lines += [
+                "<table style='width: auto; border-collapse: collapse;'>",
+                "<thead><tr style='background-color: #f0f0f0;'><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Show Name</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Date</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Time</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Button Text Found</th></tr></thead>",
+                "<tbody>",
+            ]
 
-        html_lines += ["</tbody></table><h4>https://1iota.com/</h4>"]
+            for show_name, entries in new_waitlist_dict.items():
+                show_url = [
+                    key
+                    for key, value in URL_TO_SHOW_NAME_DICT.items()
+                    if value == show_name
+                ][0]
+
+                for i, entry in enumerate(entries):
+                    row = "<tr style='border: 1px solid #ddd;'>"
+                    if i == 0:
+                        row += f"<td style='border: 1px solid #ddd; padding: 8px;' rowspan='{len(entries)}'>{show_name}<br/>{show_url}</td>"
+                    row += f"<td style='border: 1px solid #ddd; padding: 8px;'>{entry.date}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.show_time}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.button_text}</td>"
+                    row += "</tr>"
+                    html_lines.append(row)
+
+            html_lines += ["</tbody></table><h4>https://1iota.com/</h4>"]
+
+        html_lines.append("</div>")
 
         # wrap and return
         return "".join(["<html><body>"] + html_lines + ["</body></html>"])
+
+    def build_john_oliver_html(self, entries) -> str:
+        """Return the HTML table for Last Week Tonight with John Oliver ticket availability."""
+        html_lines = [
+            "<h3>Last Week Tonight with John Oliver</h3>",
+            "<table style='width: auto; border-collapse: collapse;'>",
+            "<thead><tr style='background-color: #f0f0f0;'><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Date</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Status</th><th style='border: 1px solid #ddd; padding: 8px; text-align: left;'>Details</th></tr></thead>",
+            "<tbody>",
+        ]
+
+        for entry in entries:
+            status_label = (
+                "Request Tickets"
+                if entry.status == TicketStatus.AVAILABLE
+                else "Not Yet Released"
+            )
+            html_lines.append(
+                f"<tr style='border: 1px solid #ddd;'><td style='border: 1px solid #ddd; padding: 8px;'>{entry.date_text}</td><td style='border: 1px solid #ddd; padding: 8px;'>{status_label}</td><td style='border: 1px solid #ddd; padding: 8px;'>{entry.detail}</td></tr>"
+            )
+
+        html_lines += ["</tbody></table><h4>https://www.lastweektickets.com/</h4>"]
+
+        return "".join(html_lines)
 
     def filter_entries_for_time(self, entries_dict):
         # This is a hack to avoid converting the time string to a datetime... oops

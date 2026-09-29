@@ -12,7 +12,7 @@ class DailyUpdateEmailService:
         self.ses = boto3.client("ses", region_name="us-east-1")
 
     def send_combined_email(self, html_pieces, subject: str = "Zane's Daily Update"):
-        html_pieces = [piece for piece in html_pieces if piece is not None]
+        html_pieces = [piece for piece in html_pieces if piece]
         logger.info("Sending daily update email to %d recipients with %d sections",
                    len(self.daily_update_emails), len(html_pieces))
 
